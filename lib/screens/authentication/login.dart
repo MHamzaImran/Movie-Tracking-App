@@ -6,6 +6,7 @@ import 'package:movie_tracker/screens/authentication/register.dart';
 import '../../global_widgets/appbar_widget.dart';
 import '../../global_widgets/text_widget.dart';
 import '../../theme/data.dart';
+import 'bottom_narbar.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -99,7 +100,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(
                   height: screenHeight(context) * 5,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BottomNavigation(
+                            initialIndex: 0,
+                            onIndexChanged: (int value) {},
+                          ),
+                        ),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.lightPrimaryColor,
                       minimumSize: Size(
