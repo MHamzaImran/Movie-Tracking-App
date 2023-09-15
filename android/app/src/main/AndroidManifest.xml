@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="hamzaimran.com.movie_tracker">
-   <application
+
+    <application
         android:label="movie_tracker"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

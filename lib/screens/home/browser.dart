@@ -423,10 +423,9 @@ class BrowserScreen extends StatelessWidget {
                 physics: const ClampingScrollPhysics(),
                 gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: screenWidth(context) * 50,
-                    childAspectRatio: 9 / 16,
-                    crossAxisSpacing: screenWidth(context) * 2,
-                    mainAxisSpacing: 0 // Reduce the spacing
-                    ),
+                    childAspectRatio: 9 / 15,
+                    crossAxisSpacing: screenWidth(context) * 5,
+                    mainAxisSpacing: screenWidth(context) * 0),
                 itemCount: 10,
                 itemBuilder: (context, index) {
                   return Column(
@@ -437,17 +436,9 @@ class BrowserScreen extends StatelessWidget {
                             30, // Increase the image size
                         fit: BoxFit.fitWidth,
                       ),
-                      SizedBox(
-                        height: screenHeight(context) * 1,
-                      ),
-                      Text(
-                        'The Witcher',
-                        style: TextStyle(
-                            fontSize: screenWidth(context) * 3,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black),
-                        textAlign: TextAlign.left,
-                      ),
+                      Align(
+                          alignment: Alignment.centerLeft,
+                          child: text(title: 'The Witcher', fontSize: screenWidth(context) * 3,))
                     ],
                   );
                 },

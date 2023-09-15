@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:movie_tracker/screens/home/browser.dart';
 import 'package:movie_tracker/screens/home/discover.dart';
 import 'package:movie_tracker/screens/home/home_screen.dart';
-import 'package:movie_tracker/screens/home/profile.dart';
+import 'package:movie_tracker/screens/home/profile/profile.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 
 import '../../global_widgets/responsive.dart';
-import '../../global_widgets/text_widget.dart';
 import '../../theme/data.dart';
 
 GlobalKey<NavigatorState> mainNavigatorKey = GlobalKey<NavigatorState>();
@@ -28,16 +27,11 @@ class BottomNavigation extends StatefulWidget {
 }
 
 class _BottomNavigationState extends State<BottomNavigation> {
-//  GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   final PersistentTabController _controller =
       PersistentTabController(initialIndex: 0);
-  // DateTime? _lastBackPressedTime;
-  // int currentIndex = 0;
-  // var scaffoldKey = GlobalKey<ScaffoldState>();
   final List<Widget> children = [
     const HomeScreen(),
-    // const Transactions(),
-    BrowserScreen(),
+    const BrowserScreen(),
     const DiscoverScreen(),
     const ProfileScreen(),
   ];
