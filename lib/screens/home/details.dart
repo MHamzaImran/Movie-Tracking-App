@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../global_widgets/appbar_widget.dart';
 import '../../global_widgets/responsive.dart';
 import '../../global_widgets/text_widget.dart';
 import '../../network_connection/network.dart';
@@ -16,160 +15,232 @@ class DetailScreen extends StatefulWidget {
 
 class _DetailScreenState extends State<DetailScreen> {
   var movieData = {};
+  var movieReviews = {};
+  var movieCredits = {};
+  var similarMovies = {};
   bool showLoading = false;
-  
+  String selectedButton = 'Details';
+
   getMovieData() async {
-    setState(() {
-      showLoading = true;
-    });
     var response = await Network().get('/3/movie/${widget.id}');
-    print(response);
+    // print(response);
     setState(() {
       movieData = response;
       // print(sliderMovies);
     });
+  }
+
+  getReviewsData() async {
+    var response = await Network().get('/3/movie/${widget.id}/reviews');
     setState(() {
-      showLoading = false;
+      movieReviews = response;
+      // print(sliderMovies);
     });
+  }
+
+  getCreditsData() async {
+    var response = await Network().get('/3/movie/${widget.id}/credits');
+    setState(() {
+      movieCredits = response;
+      // print(sliderMovies);
+    });
+  }
+
+  getSimilarMovies() async {
+    var response = await Network().get('/3/movie/${widget.id}/similar');
+    // print(response);
+    setState(() {
+      similarMovies = response;
+      // print(sliderMovies);
+    });
+  }
+
+  getAllData() async {
+    try {
+      setState(() {
+        showLoading = true;
+      });
+      await getMovieData();
+      await getReviewsData();
+      await getCreditsData();
+      await getSimilarMovies();
+    } catch (e) {
+      print(e);
+    } finally {
+      setState(() {
+        showLoading = false;
+      });
+    }
   }
 
   @override
   void initState() {
-    getMovieData();
+    getAllData();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    print(widget.id);
-    print(movieData);
-    print(movieData.runtimeType);
-    print(movieData['original_title']);
-
+    // print(widget.id);
+    // print(similarMovies['results'][0]['original_title']);
+    // getSimilarMovies();
     return Scaffold(
-        body: showLoading? Center(
-          child: CircularProgressIndicator(
+        body: showLoading
+            ? const Center(
+                child: CircularProgressIndicator(
+                  color: Colors.black,
+                ),
+              )
+            : ListView(
+                children: [
+                  Stack(
+                    children: [
+                      Expanded(
+                        child: Opacity(
+                          opacity: 0.8, // Adjust the opacity value (0.0 to 1.0)
+                          child: Image(
+                            image: NetworkImage(
+                                "https://image.tmdb.org/t/p/w500/${movieData['backdrop_path']}"),
+                            width: double.infinity,
+                            fit: BoxFit
+                                .fitWidth, // Adjust the fit property as needed
+                          ),
+                        ),
+                      ),
+                      // movie title
+                      Positioned(
+                        bottom: screenHeight(context) * 0,
+                        left: screenWidth(context) * 5,
+                        child: SizedBox(
+                          width: screenWidth(context) * 90,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              text(
+                                title: movieData['original_title'],
+                                fontSize: screenWidth(context) * 4,
+                                fontWeight: FontWeight.w500,
+                                color: AppTheme.lightPrimaryColor,
+                              ),
+                              SizedBox(height: screenHeight(context) * 1),
+                              // rating and duration
+                              Row(
+                                children: [
+                                  // duration icon
+                                  Icon(
+                                    Icons.access_time,
+                                    color: AppTheme.lightPrimaryColor,
+                                    size: screenWidth(context) * 4,
+                                  ),
+                                  SizedBox(width: screenWidth(context) * 1),
+
+                                  text(
+                                    title: "${movieData['runtime']} min",
+                                    fontSize: screenWidth(context) * 3,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppTheme.lightPrimaryColor,
+                                  ),
+                                  SizedBox(width: screenWidth(context) * 3),
+                                  // rating icon
+                                  Icon(
+                                    Icons.star,
+                                    color: AppTheme.lightPrimaryColor,
+                                    size: screenWidth(context) * 4,
+                                  ),
+                                  SizedBox(width: screenWidth(context) * 1),
+
+                                  text(
+                                    title:
+                                        '${movieData['vote_average']} (IMDB)',
+                                    fontSize: screenWidth(context) * 3,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppTheme.lightPrimaryColor,
+                                  ),
+                                ],
+                              ),
+
+                              // SizedBox(height: screenHeight(context) * 1),
+                              // text(
+                              //   title: movieData['tagline'],
+                              //   fontSize: screenWidth(context) * 3,
+                              //   fontWeight: FontWeight.w500,
+                              //   color: Colors.white,
+                              //   maxLines: 3,
+                              // ),
+                              SizedBox(height: screenHeight(context) * 2),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: screenWidth(context) * 5,
+                      vertical: screenHeight(context) * 2,
+                    ),
+                    child: SizedBox(
+                      height: screenHeight(context) * 5,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          detailButton(context, 'Details'),
+                          detailButton(context, 'Reviews'),
+                          detailButton(context, 'Credits'),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (selectedButton == 'Details') detailsSection(context),
+                  if (selectedButton == 'Reviews') reviewSection(context),
+                  if (selectedButton == 'Credits') creditSection(context),
+                  SizedBox(height: screenHeight(context) * 10),
+                ],
+              ));
+  }
+
+  details(BuildContext context, String title, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth(context) * 5,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          text(
+            title: title,
+            fontSize: screenWidth(context) * 3.5,
+            fontWeight: FontWeight.w600,
             color: Colors.black,
           ),
-        ):ListView(
-      children: [
-        Stack(
-          children: [
-            Expanded(
-              child: Opacity(
-                opacity: 0.8, // Adjust the opacity value (0.0 to 1.0)
-                child: Image(
-                  image: NetworkImage(
-                      "https://image.tmdb.org/t/p/w500/${movieData['backdrop_path']}"),
-                  width: double.infinity,
-                  fit: BoxFit.fitWidth, // Adjust the fit property as needed
-                ),
-              ),
-            ),
-            // movie title
-            Positioned(
-              bottom: screenHeight(context) * 0,
-              left: screenWidth(context) * 5,
-              child: SizedBox(
-                width: screenWidth(context) * 90,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    text(
-                      title: movieData['original_title'],
-                      fontSize: screenWidth(context) * 4,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.lightPrimaryColor,
-                    ),
-                    SizedBox(height: screenHeight(context) * 1),
-                    // rating and duration
-                    Row(
-                      children: [
-                        // duration icon
-                        Icon(
-                          Icons.person,
-                          color: AppTheme.lightPrimaryColor,
-                          size: screenWidth(context) * 4,
-                        ),
-                        SizedBox(width: screenWidth(context) * 1),
-
-                        text(
-                          title: movieData['vote_count'].toString(),
-                          fontSize: screenWidth(context) * 3,
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.lightPrimaryColor,
-                        ),
-                        SizedBox(width: screenWidth(context) * 3),
-                        // rating icon
-                        Icon(
-                          Icons.star,
-                          color: AppTheme.lightPrimaryColor,
-                          size: screenWidth(context) * 4,
-                        ),
-                        SizedBox(width: screenWidth(context) * 1),
-
-                        text(
-                          title: '${movieData['vote_average']} (IMDB)',
-                          fontSize: screenWidth(context) * 3,
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.lightPrimaryColor,
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: screenHeight(context) * 1),
-                    text(
-                      title: movieData['tagline'],
-                      fontSize: screenWidth(context) * 3,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                      maxLines: 3,
-                    ),
-                    SizedBox(height: screenHeight(context) * 2),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: screenWidth(context) * 5,
-            vertical: screenHeight(context) * 2,
-          ),
-          child: SizedBox(
-            height: screenHeight(context) * 5,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                detailButton(context, 'Rating'),
-                detailButton(context, 'Guide'),
-                detailButton(context, 'Award'),
-                detailButton(context, 'Cast'),
-              ],
-            ),
-          ),
-        ),
-      ],
-    ));
+          SizedBox(height: screenHeight(context) * 1),
+          text(
+              title: value,
+              fontSize: screenWidth(context) * 3.5,
+              fontWeight: FontWeight.w400,
+              color: Colors.black,
+              maxLines: 3),
+        ],
+      ),
+    );
   }
 
   detailButton(BuildContext context, String title) {
     return GestureDetector(
       onTap: () {
-        // setState(() {
-        //   if(selectedFilter == title) {
-        //     selectedFilter = '';
-        //   } else {
-        //     selectedFilter = title;
-        //   }
-        // });
+        setState(() {
+          selectedButton = title;
+        });
+        // print(selectedButton);
+        // print(title);
       },
       child: SizedBox(
-        width: screenWidth(context) * 22,
+        width: screenWidth(context) * 30,
         child: Card(
           elevation: 0,
-          color: Colors.grey[200],
+          color: selectedButton == title
+              ? AppTheme.lightPrimaryColor
+              : Colors.grey[200],
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
             side: const BorderSide(
@@ -190,5 +261,482 @@ class _DetailScreenState extends State<DetailScreen> {
         ),
       ),
     );
+  }
+
+  detailsSection(BuildContext context) {
+    return movieData != null
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth(context) * 5,
+                ),
+                child: text(
+                  title: 'Overview',
+                  fontSize: screenWidth(context) * 3.5,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: screenHeight(context) * 1),
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth(context) * 5,
+                ),
+                child: text(
+                  title: movieData['overview'],
+                  fontSize: screenWidth(context) * 3.5,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.black,
+                  maxLines: 15,
+                ),
+              ),
+              SizedBox(height: screenHeight(context) * 2),
+              // release date
+              details(context, 'Release Date', movieData['release_date']),
+              SizedBox(height: screenHeight(context) * 2),
+              details(context, 'Status', movieData['status']),
+              SizedBox(height: screenHeight(context) * 2),
+              details(context, 'Tagline', movieData['tagline']),
+              SizedBox(height: screenHeight(context) * 2),
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth(context) * 5,
+                ),
+                child: text(
+                  title: 'Genre',
+                  fontSize: screenWidth(context) * 3.5,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: screenHeight(context) * 1),
+              Container(
+                  height: screenHeight(context) * 5,
+                  margin: EdgeInsets.symmetric(
+                    horizontal: screenWidth(context) * 5,
+                  ),
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: movieData['genres'].length,
+                    itemBuilder: (context, index) {
+                      return Center(
+                        child: Padding(
+                          padding:
+                              EdgeInsets.only(right: screenWidth(context) * 2),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth(context) * 5,
+                              vertical: screenHeight(context) * 1,
+                            ),
+                            decoration: BoxDecoration(
+                              // color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(
+                                screenWidth(context) * 2,
+                              ),
+                              border: Border.all(
+                                color: AppTheme.lightPrimaryColor,
+                              ),
+                            ),
+                            child: text(
+                              title: movieData['genres'][index]['name'],
+                              fontSize: screenWidth(context) * 3,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  )),
+              SizedBox(height: screenHeight(context) * 2),
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth(context) * 5,
+                ),
+                child: SizedBox(
+                  height: screenHeight(context) * 6,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.lightPrimaryColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                screenWidth(context) * 2,
+                              ),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.add,
+                                color: Colors.black,
+                                size: screenWidth(context) * 4,
+                              ),
+                              SizedBox(width: screenWidth(context) * 2),
+                              text(
+                                title: 'Add to Watchlist',
+                                fontSize: screenWidth(context) * 3,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: screenHeight(context) * 2),
+              movieData['production_companies'].length == 0
+                  ? Container()
+                  : Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth(context) * 5,
+                      ),
+                      child: text(
+                        title: 'Production Companies',
+                        fontSize: screenWidth(context) * 3.5,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+              SizedBox(height: screenHeight(context) * 1),
+              Container(
+                height: screenHeight(context) * 10,
+                margin: EdgeInsets.symmetric(
+                  horizontal: screenWidth(context) * 5,
+                ),
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: movieData['production_companies'].length,
+                  itemBuilder: (context, index) {
+                    final productionCompany =
+                        movieData['production_companies'][index];
+                    if (productionCompany['logo_path'] != null) {
+                      return Padding(
+                        padding:
+                            EdgeInsets.only(right: screenWidth(context) * 5),
+                        child: SizedBox(
+                          width: screenWidth(context) * 25,
+                          child: Image.network(
+                            "https://image.tmdb.org/t/p/w500/${productionCompany['logo_path']}",
+                            width: screenWidth(context) * 25,
+                            height: screenHeight(context) * 10,
+                          ),
+                        ),
+                      );
+                    } else {
+                      return Container(); // Skip items with null logo_path
+                    }
+                  },
+                ),
+              ),
+              SizedBox(height: screenHeight(context) * 2),
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth(context) * 5,
+                ),
+                child: text(
+                  title: 'Similar Movies',
+                  fontSize: screenWidth(context) * 3.5,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: screenHeight(context) * 2),
+              // Container(
+              //   height: screenHeight(context) * 10,
+              //   margin: EdgeInsets.symmetric(
+              //     horizontal: screenWidth(context) * 5,
+              //   ),
+              //   child: ListView.builder(
+              //     scrollDirection: Axis.horizontal,
+              //     itemCount: similarMovies['results'].length,
+              //     itemBuilder: (context, index) {
+              //       print(similarMovies['results'][index]['poster_path']);
+              //       final movie =
+              //       similarMovies['result'][index];
+              //       if (movie['logo_path'] != null) {
+              //         return Padding(
+              //           padding: EdgeInsets.only(right: screenWidth(context) * 5),
+              //           child: SizedBox(
+              //             width: screenWidth(context) * 25,
+              //             child: Image.network(
+              //               "https://image.tmdb.org/t/p/w500/${similarMovies['result'][index]['poster_path']}",
+              //               width: screenWidth(context) * 25,
+              //               height: screenHeight(context) * 10,
+              //             ),
+              //           ),
+              //         );
+              //       } else {
+              //         return Container(); // Skip items with null logo_path
+              //       }
+              //     },
+              //   ),
+              // ),
+              Container(
+                  height: screenHeight(context) * 20,
+                  margin: EdgeInsets.symmetric(
+                    horizontal: screenWidth(context) * 5,
+                  ),
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: similarMovies['results'].length,
+                    itemBuilder: (context, index) {
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DetailScreen(
+                                id: similarMovies['results'][index]['id'],
+                              ),
+                            ),
+                          );
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                              right: screenWidth(context) * 5),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(
+                                10.0), // Adjust the radius as needed
+                            child: Image.network(
+                              "https://image.tmdb.org/t/p/w500/${similarMovies['results'][index]['poster_path']}",
+                              height: screenHeight(context) * 20,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  )),
+            ],
+          )
+        : Container();
+  }
+
+  reviewSection(BuildContext context) {
+    return movieReviews['results'] != null
+        ? Column(
+            children: [
+              SizedBox(height: screenHeight(context) * 2),
+              for (var i = 0; i < movieReviews['results'].length; i++)
+                Container(
+                  width: screenWidth(context) * 90,
+                  margin: EdgeInsets.only(
+                    bottom: screenHeight(context) * 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Colors.black,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: screenWidth(context) * 5,
+                      vertical: screenHeight(context) * 2,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        text(
+                          title: movieReviews['results'][0]['author'],
+                          fontSize: screenWidth(context) * 3.5,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black,
+                        ),
+                        SizedBox(height: screenHeight(context) * 1),
+                        text(
+                          title: movieReviews['results'][0]['content'],
+                          fontSize: screenWidth(context) * 3.5,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black,
+                          maxLines: 50,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          )
+        : Container();
+  }
+
+  creditSection(BuildContext context) {
+    return movieCredits['cast'] != null
+        ? Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth(context) * 3,
+              vertical: screenHeight(context) * 0,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                text(
+                  title: 'Cast',
+                  fontSize: screenWidth(context) * 4,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
+                ),
+                SizedBox(height: screenHeight(context) * 2),
+                Wrap(
+                  spacing: 2, // Spacing between items horizontally
+                  runSpacing: 5.0, // Spacing between items vertically
+                  children: List.generate(
+                    movieCredits['cast'].length,
+                    (index) {
+                      final profilePath =
+                          movieCredits['cast'][index]['profile_path'];
+                      // Check if profilePath is not null
+                      if (profilePath != null) {
+                        return SizedBox(
+                          width: screenWidth(context) * 30,
+                          child: Column(
+                            children: [
+                              ClipOval(
+                                child: SizedBox(
+                                  width: screenWidth(context) * 30,
+                                  height: screenWidth(context) * 30,
+                                  child: Image.network(
+                                    "https://image.tmdb.org/t/p/w500/$profilePath",
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: screenHeight(context) * 1),
+                              SizedBox(
+                                width: screenWidth(context) * 30,
+                                child: text(
+                                  title: movieCredits['cast'][index]['name'],
+                                  fontSize: screenWidth(context) * 3,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black,
+                                  maxLines: 2,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      } else {
+                        // Return a Column with a grey circle and cast name
+                        return Column(
+                          children: [
+                            ClipOval(
+                              child: Container(
+                                color: Colors.grey[200],
+                                width: screenWidth(context) * 30,
+                                height: screenWidth(context) * 30,
+                                child: Image.asset(
+                                  "assets/cast.png",
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: screenHeight(context) * 1),
+                            text(
+                              title: movieCredits['cast'][index]['name'],
+                              fontSize: screenWidth(context) * 2.5,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black,
+                              maxLines: 2,
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        );
+                      }
+                    },
+                  ).where((widget) => widget != null).toList(),
+                ),
+                SizedBox(height: screenHeight(context) * 5),
+                text(
+                  title: 'Crew',
+                  fontSize: screenWidth(context) * 4,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
+                ),
+                SizedBox(height: screenHeight(context) * 2),
+                Wrap(
+                  spacing: 2, // Spacing between items horizontally
+                  runSpacing: 5.0, // Spacing between items vertically
+                  children: List.generate(
+                    movieCredits['crew'].length,
+                    (index) {
+                      final profilePath =
+                          movieCredits['crew'][index]['profile_path'];
+                      // Check if profilePath is not null
+                      if (profilePath != null) {
+                        return SizedBox(
+                          width: screenWidth(context) * 30,
+                          child: Column(
+                            children: [
+                              ClipOval(
+                                child: SizedBox(
+                                  width: screenWidth(context) * 30,
+                                  height: screenWidth(context) * 30,
+                                  child: Image.network(
+                                    "https://image.tmdb.org/t/p/w500/$profilePath",
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: screenHeight(context) * 1),
+                              SizedBox(
+                                width: screenWidth(context) * 30,
+                                child: text(
+                                  title: movieCredits['crew'][index]['name'],
+                                  fontSize: screenWidth(context) * 3,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black,
+                                  maxLines: 2,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      } else {
+                        // Return a Column with a grey circle and cast name
+                        return Column(
+                          children: [
+                            ClipOval(
+                              child: Container(
+                                color: Colors.grey[200],
+                                width: screenWidth(context) * 30,
+                                height: screenWidth(context) * 30,
+                                child: Image.asset(
+                                  "assets/cast.png",
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: screenHeight(context) * 1),
+                            text(
+                              title: movieCredits['crew'][index]['name'],
+                              fontSize: screenWidth(context) * 2.5,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black,
+                              maxLines: 2,
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        );
+                      }
+                    },
+                  ).where((widget) => widget != null).toList(),
+                ),
+              ],
+            ),
+          )
+        : Container();
   }
 }
