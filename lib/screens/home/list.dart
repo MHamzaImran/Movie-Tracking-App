@@ -8,7 +8,8 @@ import '../../network_connection/network.dart';
 
 class ListScreen extends StatefulWidget {
   final String title;
-  const ListScreen({Key? key, required this.title}) : super(key: key);
+  final String mediaType;
+  const ListScreen({Key? key, required this.title, required this.mediaType}) : super(key: key);
 
   @override
   State<ListScreen> createState() => _ListScreenState();
@@ -30,8 +31,14 @@ class _ListScreenState extends State<ListScreen> {
       category = 'upcoming';
     } else if (widget.title == 'Now Playing') {
       category = 'now_playing';
-    } else {
+    } else if (widget.title == 'Popular Shows') {
       category = 'popular';
+    } else if (widget.title == 'Top Rated Shows') {
+      category = 'top_rated';
+    } else if (widget.title == 'On The Air') {
+      category = 'on_the_air';
+    } else if (widget.title == 'Shows Airing Today') {
+      category = 'airing_today';
     }
     print(category);
   }
@@ -43,10 +50,12 @@ class _ListScreenState extends State<ListScreen> {
       });
       await getCategory();
       var response = await Network()
-          .get('/3/movie/$category?language=en-US&page=$currentPage');
+          .get('/3/${widget.mediaType}/$category?language=en-US&page=$currentPage');
       print(response);
       setState(() {
         movies = response['results'];
+        // remove movies with null poster
+        movies.removeWhere((element) => element['poster_path'] == null);
         totalPage = response['total_pages'];
       });
     } catch (e) {
@@ -104,15 +113,11 @@ class _ListScreenState extends State<ListScreen> {
                                 MaterialPageRoute(
                                     builder: (context) => DetailScreen(
                                           id: movies[index]['id'],
+                                      mediaType: widget.mediaType,
                                         )));
                           },
                           child: Column(
                             children: [
-                              // Image.asset(
-                              //   'assets/top10card1.png',
-                              //   height: screenHeight(context) * 30, // Increase the image size
-                              //   fit: BoxFit.fitWidth,
-                              // ),
                               Image.network(
                                 "https://image.tmdb.org/t/p/w500/${movies[index]['poster_path']}",
                                 height: screenHeight(context) *
@@ -123,7 +128,8 @@ class _ListScreenState extends State<ListScreen> {
                               Align(
                                   alignment: Alignment.centerLeft,
                                   child: text(
-                                    title: movies[index]['original_title'],
+                                    title: movies[index]['original_title'] ??
+                                        movies[index]['original_name'],
                                     fontSize: screenWidth(context) * 3,
                                   ))
                             ],

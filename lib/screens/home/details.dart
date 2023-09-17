@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../global_widgets/responsive.dart';
 import '../../global_widgets/text_widget.dart';
 import '../../network_connection/network.dart';
@@ -7,7 +6,9 @@ import '../../theme/data.dart';
 
 class DetailScreen extends StatefulWidget {
   final int id;
-  const DetailScreen({Key? key, required this.id}) : super(key: key);
+  final String mediaType;
+  const DetailScreen({Key? key, required this.id, this.mediaType = 'movie'})
+      : super(key: key);
 
   @override
   State<DetailScreen> createState() => _DetailScreenState();
@@ -22,8 +23,18 @@ class _DetailScreenState extends State<DetailScreen> {
   String selectedButton = 'Details';
 
   getMovieData() async {
-    var response = await Network().get('/3/movie/${widget.id}');
-    // print(response);
+    var response = {};
+    if (widget.mediaType == 'movie') {
+      response = await Network().get('/3/movie/${widget.id}');
+    } else if (widget.mediaType == 'tv') {
+      response = await Network().get('/3/tv/${widget.id}');
+      print(response);
+    } else {
+      response = await Network().get('/3/movie/${widget.id}');
+      setState(() {
+        movieData = response;
+      });
+    }
     setState(() {
       movieData = response;
       // print(sliderMovies);
@@ -31,7 +42,14 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
   getReviewsData() async {
-    var response = await Network().get('/3/movie/${widget.id}/reviews');
+    var response = {};
+    if (widget.mediaType == 'movie') {
+      response = await Network().get('/3/movie/${widget.id}/reviews');
+    } else if (widget.mediaType == 'tv') {
+      response = await Network().get('/3/tv/${widget.id}/reviews');
+    } else {
+      response = await Network().get('/3/movie/${widget.id}/reviews');
+    }
     setState(() {
       movieReviews = response;
       // print(sliderMovies);
@@ -39,7 +57,14 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
   getCreditsData() async {
-    var response = await Network().get('/3/movie/${widget.id}/credits');
+    var response = {};
+    if (widget.mediaType == 'movie') {
+      response = await Network().get('/3/movie/${widget.id}/credits');
+    } else if (widget.mediaType == 'tv') {
+      response = await Network().get('/3/tv/${widget.id}/credits');
+    } else {
+      response = await Network().get('/3/movie/${widget.id}/credits');
+    }
     setState(() {
       movieCredits = response;
       // print(sliderMovies);
@@ -47,7 +72,18 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
   getSimilarMovies() async {
-    var response = await Network().get('/3/movie/${widget.id}/similar');
+    var response = {};
+    if (widget.mediaType == 'movie') {
+      response = await Network()
+          .get('/3/movie/${widget.id}/similar?language=en-US&page=1');
+    } else if (widget.mediaType == 'tv') {
+      print('Getting TV Data');
+      response = await Network()
+          .get('/3/tv/${widget.id}/similar?language=en-US&page=1');
+    } else {
+      response = await Network()
+          .get('/3/movie/${widget.id}/similar?language=en-US&page=1');
+    }
     // print(response);
     setState(() {
       similarMovies = response;
@@ -81,9 +117,11 @@ class _DetailScreenState extends State<DetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // print(widget.id);
+    print(widget.id);
+    print(widget.mediaType);
     // print(similarMovies['results'][0]['original_title']);
     // getSimilarMovies();
+    // print(similarMovies);
     return Scaffold(
         body: showLoading
             ? const Center(
@@ -117,7 +155,7 @@ class _DetailScreenState extends State<DetailScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               text(
-                                title: movieData['original_title'],
+                                title: movieData['original_title'] ?? '',
                                 fontSize: screenWidth(context) * 4,
                                 fontWeight: FontWeight.w500,
                                 color: AppTheme.lightPrimaryColor,
@@ -126,22 +164,6 @@ class _DetailScreenState extends State<DetailScreen> {
                               // rating and duration
                               Row(
                                 children: [
-                                  // duration icon
-                                  Icon(
-                                    Icons.access_time,
-                                    color: AppTheme.lightPrimaryColor,
-                                    size: screenWidth(context) * 4,
-                                  ),
-                                  SizedBox(width: screenWidth(context) * 1),
-
-                                  text(
-                                    title: "${movieData['runtime']} min",
-                                    fontSize: screenWidth(context) * 3,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppTheme.lightPrimaryColor,
-                                  ),
-                                  SizedBox(width: screenWidth(context) * 3),
-                                  // rating icon
                                   Icon(
                                     Icons.star,
                                     color: AppTheme.lightPrimaryColor,
@@ -151,22 +173,13 @@ class _DetailScreenState extends State<DetailScreen> {
 
                                   text(
                                     title:
-                                        '${movieData['vote_average']} (IMDB)',
+                                        '${movieData['vote_average'] ?? ''} (IMDB)',
                                     fontSize: screenWidth(context) * 3,
                                     fontWeight: FontWeight.w500,
                                     color: AppTheme.lightPrimaryColor,
                                   ),
                                 ],
                               ),
-
-                              // SizedBox(height: screenHeight(context) * 1),
-                              // text(
-                              //   title: movieData['tagline'],
-                              //   fontSize: screenWidth(context) * 3,
-                              //   fontWeight: FontWeight.w500,
-                              //   color: Colors.white,
-                              //   maxLines: 3,
-                              // ),
                               SizedBox(height: screenHeight(context) * 2),
                             ],
                           ),
@@ -204,7 +217,7 @@ class _DetailScreenState extends State<DetailScreen> {
       padding: EdgeInsets.symmetric(
         horizontal: screenWidth(context) * 5,
       ),
-      child: Column(
+      child: (value.isEmpty)?const SizedBox():Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           text(
@@ -285,7 +298,7 @@ class _DetailScreenState extends State<DetailScreen> {
                   horizontal: screenWidth(context) * 5,
                 ),
                 child: text(
-                  title: movieData['overview'],
+                  title: movieData['overview'] ?? '',
                   fontSize: screenWidth(context) * 3.5,
                   fontWeight: FontWeight.w400,
                   color: Colors.black,
@@ -294,12 +307,30 @@ class _DetailScreenState extends State<DetailScreen> {
               ),
               SizedBox(height: screenHeight(context) * 2),
               // release date
-              details(context, 'Release Date', movieData['release_date']),
+              details(
+                  context,
+                  widget.mediaType == 'movie'
+                      ? 'Release Date'
+                      : 'First Air Date',
+                  widget.mediaType == 'movie'
+                      ? movieData['release_date']
+                      : movieData['first_air_date'] ?? ''),
               SizedBox(height: screenHeight(context) * 2),
-              details(context, 'Status', movieData['status']),
+              details(context, 'Status', movieData['status'] ?? ''),
               SizedBox(height: screenHeight(context) * 2),
-              details(context, 'Tagline', movieData['tagline']),
+              details(context, 'Tagline', movieData['tagline'] ?? ''),
               SizedBox(height: screenHeight(context) * 2),
+              if (widget.mediaType == 'tv')
+                Column(
+                  children: [
+                    details(context, 'Total Season',
+                        movieData['number_of_seasons'].toString() ?? ''),
+                    SizedBox(height: screenHeight(context) * 2),
+                    details(context, 'Total Episode',
+                        movieData['number_of_episodes'].toString() ?? ''),
+                    SizedBox(height: screenHeight(context) * 2),
+                  ],
+                ),
               Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: screenWidth(context) * 5,
@@ -444,7 +475,9 @@ class _DetailScreenState extends State<DetailScreen> {
                   horizontal: screenWidth(context) * 5,
                 ),
                 child: text(
-                  title: 'Similar Movies',
+                  title: widget.mediaType == 'movie'
+                      ? 'Similar Movies'
+                      : 'Similar TV Shows',
                   fontSize: screenWidth(context) * 3.5,
                   fontWeight: FontWeight.w600,
                   color: Colors.black,
@@ -497,13 +530,14 @@ class _DetailScreenState extends State<DetailScreen> {
                             MaterialPageRoute(
                               builder: (context) => DetailScreen(
                                 id: similarMovies['results'][index]['id'],
+                                mediaType: widget.mediaType,
                               ),
                             ),
                           );
                         },
                         child: Padding(
-                          padding: EdgeInsets.only(
-                              right: screenWidth(context) * 5),
+                          padding:
+                              EdgeInsets.only(right: screenWidth(context) * 5),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(
                                 10.0), // Adjust the radius as needed
@@ -523,7 +557,7 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
   reviewSection(BuildContext context) {
-    return movieReviews['results'] != null
+    return movieReviews['results'] != null && movieReviews['results'].length > 0
         ? Column(
             children: [
               SizedBox(height: screenHeight(context) * 2),
@@ -568,7 +602,14 @@ class _DetailScreenState extends State<DetailScreen> {
                 ),
             ],
           )
-        : Container();
+        : Center(
+            child: text(
+              title: 'No Reviews',
+              fontSize: screenWidth(context) * 3.5,
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
+            ),
+          );
   }
 
   creditSection(BuildContext context) {

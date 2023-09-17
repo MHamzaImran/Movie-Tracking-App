@@ -3,15 +3,16 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:movie_tracker/global_widgets/responsive.dart';
+import 'package:movie_tracker/network_connection/watchList_table.dart';
 import 'package:movie_tracker/screens/home/profile/profileData.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-
 import '../../../global_widgets/text_widget.dart';
 import '../../../network_connection/google_sign_in.dart';
 import '../../../theme/data.dart';
+import '../../authentication/login.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -24,10 +25,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String name = '';
   String email = '';
   String profileUrl = '';
+  bool isLoading = false;
   
+  getWatchList() async {
+    WatchListTable watchListTable = WatchListTable();
+    // current user id from firebase
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userId = prefs.getString('userId');
+    print(userId);
+    
+    var response = await watchListTable.getMovieItemsFromWatchList(
+      'h2Q7SV2wWSQA7OIKyMvd8oO9NkF3',
+    );
+    print(response);
+  }
 
   @override
   Widget build(BuildContext context) {
+    // getWatchList();
     return BlocBuilder<ProfileCubit, ProfileState>(
       builder: (context, state) {
         // final userProfile = state.userProfile!;
@@ -59,16 +74,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       width: screenWidth(context) * 25,
                       child: Card(
                         child: ClipRRect(
-                          borderRadius:
-                              BorderRadius.circular(10), // Same radius as Card
-                          child: profileUrl == '' ? Image.asset(
-                            'assets/profile.png',
-                            fit: BoxFit.cover,
-                          ): Image.network(
-                            profileUrl,
-                            fit: BoxFit.cover,
-                          )
-                        ),
+                            borderRadius: BorderRadius.circular(
+                                10), // Same radius as Card
+                            child: profileUrl == ''
+                                ? Image.asset(
+                                    'assets/profile.png',
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.network(
+                                    profileUrl,
+                                    fit: BoxFit.cover,
+                                  )),
                       ),
                     ),
                     SizedBox(
@@ -188,8 +204,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   border: Border.all(color: Colors.black),
                 ),
                 child: ElevatedButton(
-                  onPressed: () async{
-                    // await GoogleSignInProvider().logout();
+                  onPressed: () async {
+                    try {
+                      setState(() {
+                        isLoading = true;
+                      });
+                      await GoogleSignInProvider().logout();
+                    } catch (e) {
+                      print(e);
+                    } finally {
+                      Navigator.of(context, rootNavigator: true).pop();
+                      setState(() {
+                        isLoading = false;
+                      });
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     elevation: 0,
@@ -198,11 +226,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: text(
-                    title: 'Logout',
-                    color: Colors.white,
-                    fontSize: screenWidth(context) * 3,
-                  ),
+                  child: isLoading
+                      ? Padding(
+                          padding: EdgeInsets.all(
+                            screenWidth(context) * 1,
+                          ),
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 1,
+                          ),
+                        )
+                      : text(
+                          title: 'Logout',
+                          color: Colors.white,
+                          fontSize: screenWidth(context) * 3,
+                        ),
                 ),
               ),
               SizedBox(height: screenHeight(context) * 8),

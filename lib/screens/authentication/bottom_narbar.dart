@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:movie_tracker/screens/home/browser.dart';
+import 'package:movie_tracker/screens/home/browser/browser.dart';
 import 'package:movie_tracker/screens/home/discover.dart';
 import 'package:movie_tracker/screens/home/home_screen.dart';
 import 'package:movie_tracker/screens/home/profile/profile.dart';
@@ -39,12 +39,10 @@ class _BottomNavigationState extends State<BottomNavigation> {
   @override
   void initState() {
     super.initState();
-    // bottomNavigationIndex = widget.initialIndex;
   }
 
   @override
   Widget build(BuildContext context) {
-    // final navbarModel = Provider.of<NavbarData>(context);
     return PersistentTabView(
       context,
       controller: _controller,
@@ -117,12 +115,6 @@ class _BottomNavigationState extends State<BottomNavigation> {
       resizeToAvoidBottomInset: true,
       stateManagement: true,
       hideNavigationBarWhenKeyboardShows: true,
-      // decoration: NavBarDecoration(
-      //   borderRadius: BorderRadius.circular(10.0),
-      //   colorBehindNavBar: Colors.white,
-      // ),
-      // popAllScreensOnTapOfSelectedTab: false,
-      // popActionScreens: PopActionScreensType.all,
       margin: EdgeInsets.zero,
       padding: NavBarPadding.all(screenWidth(context) * 2),
       bottomScreenMargin: screenWidth(context) * 2,

@@ -148,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 CarouselSlider.builder(
                   itemCount: 10,
                   options: CarouselOptions(
-                    autoPlay: false,
+                    autoPlay: true,
                     aspectRatio: 1.5,
                     viewportFraction: 1,
                     // enlargeCenterPage: true,
@@ -428,7 +428,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => ListScreen(
-                    title: title,
+                    title: title, mediaType: 'movie',
                   ),
                 ),
               );

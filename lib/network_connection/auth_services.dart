@@ -1,7 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../global_widgets/toast_block.dart';
+
 class AuthServices {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoogleSignIn googleSignIn = GoogleSignIn();
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
   // Create a variable to track user login status
   bool isLoggedIn = false;
 
@@ -31,7 +37,7 @@ class AuthServices {
 
       // Obtain the auth details from the request
       final GoogleSignInAuthentication? googleAuth =
-      await googleUser?.authentication;
+          await googleUser?.authentication;
 
       print('googleAuth: $googleAuth');
 
@@ -43,11 +49,19 @@ class AuthServices {
 
       // Sign in with Firebase
       final userCredential =
-      await FirebaseAuth.instance.signInWithCredential(credential);
+          await FirebaseAuth.instance.signInWithCredential(credential);
 
       // User is logged in, update the authentication state and user data
       isLoggedIn = true;
       userData = userCredential.user;
+
+      // Store user data in Firestore
+      await firestore.collection('users').doc(userCredential.user!.uid).set({
+        'email': userCredential.user!.email,
+        // Add other user data as needed
+      });
+      
+      await createWatchListCollectionIfNotExists(userCredential.user!.uid);
 
       return userCredential;
     } catch (error) {
@@ -75,4 +89,91 @@ class AuthServices {
       print('Error signing out: $error');
     }
   }
+
+  // Sign in with email and password
+  Future<UserCredential?> signInWithEmailAndPassword(
+      String email, String password) async {
+    try {
+      final UserCredential userCredential = await _auth
+          .signInWithEmailAndPassword(email: email, password: password);
+
+      // User is logged in, update the authentication state and user data
+      isLoggedIn = true;
+      userData = userCredential.user;
+
+      // Store user data in Firestore
+      await firestore.collection('users').doc(userCredential.user!.uid).set({
+        'email': userCredential.user!.email,
+        // Add other user data as needed
+      });
+
+      await createWatchListCollectionIfNotExists(userCredential.user!.uid);
+
+      return userCredential;
+    } catch (error) {
+      // Handle errors
+      print("Error signing in with email/password: $error");
+      toastBlock('Invalid email or password');
+      return null;
+    }
+  }
+
+  // Register a new user with email and password
+  Future registerWithEmailAndPassword(String email, String password) async {
+    try {
+      final UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
+
+      // If registration is successful, userCredential will contain user information.
+      final User? user = userCredential.user;
+      if (user != null) {
+        // User registered successfully.
+        print('User registered: ${user.uid}');
+      } else {}
+    } catch (e) {
+      // Use a regular expression to extract the message inside square brackets
+      RegExp regExp = RegExp(r'\[.*\] (.*)');
+      Match? match = regExp.firstMatch(e.toString());
+
+      if (match != null && match.groupCount >= 1) {
+        String extractedMessage = match.group(1)!;
+        toastBlock(extractedMessage);
+      } else {
+        toastBlock('User registration failed.');
+      }
+    }
+  }
+
+  // Store user data in Firestore
+  Future<void> storeUserDataInFirestore(
+      String uid, String displayName, String email, String photoURL) async {
+    try {
+      // Reference to Firestore collection
+      final userCollection = FirebaseFirestore.instance.collection('users');
+
+      // Create a document for the user using their UID
+      await userCollection.doc(uid).set({
+        'displayName': displayName,
+        'email': email,
+        'photoURL': photoURL,
+        // Add more user data as needed
+      });
+
+      print('User data stored in Firestore.');
+    } catch (error) {
+      print('Error storing user data in Firestore: $error');
+    }
+  }
+
+  Future<void> createWatchListCollectionIfNotExists(String userId) async {
+    final collectionRef = FirebaseFirestore.instance.collection('watchList');
+
+    final docSnapshot = await collectionRef.doc(userId).get();
+
+    if (!docSnapshot.exists) {
+      // Collection doesn't exist, create it
+      await collectionRef.doc(userId).set({});
+    }
+  }
+  
 }

@@ -7,10 +7,13 @@ import 'package:movie_tracker/screens/authentication/register.dart';
 
 import '../../global_widgets/appbar_widget.dart';
 import '../../global_widgets/text_widget.dart';
+import '../../network_connection/auth_services.dart';
 import '../../network_connection/google_sign_in.dart';
 import '../../theme/data.dart';
 import '../home/profile/profileData.dart';
 import 'bottom_narbar.dart';
+
+int indexForBottomBar = 0;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -21,22 +24,57 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool googleLoading = false;
+  bool emailLoading = false;
+  TextEditingController emailController = TextEditingController();
+  String emailErrorMessage = '';
+  TextEditingController passwordController = TextEditingController();
+  String passwordErrorMessage = '';
+  bool emailIsValid = false;
+  bool passwordIsValid = false;
 
-  // userAlreadyLoggedIn() async {
-  //   final user = await FirebaseAuth.instance.currentUser;
-  //   if (user != null) {
-  //     Navigator.pushReplacement(
-  //       context,
-  //       MaterialPageRoute(
-  //         builder: (context) => BottomNavigation(
-  //           initialIndex: 0,
-  //           onIndexChanged: (int value) {},
-  //         ),
-  //       ),
-  //     );
-  //   }
-  // }
-
+  emailValidation() {
+    if (emailController.text.isEmpty) {
+      setState(() {
+        emailErrorMessage = 'Email is required';
+        emailIsValid = false;
+      });
+    } else if (!emailController.text.contains('@')) {
+      setState(() {
+        emailErrorMessage = 'Email is invalid';
+        emailIsValid = false;
+      });
+    } else if (emailController.text.contains(' ')) {
+      setState(() {
+        emailErrorMessage = 'Email is invalid';
+        emailIsValid = false;
+      });
+    } else {
+      setState(() {
+        emailErrorMessage = '';
+        emailIsValid = true;
+      });
+    }
+  }
+  passwordValidation(){
+    if(passwordController.text.isEmpty){
+      setState(() {
+        passwordErrorMessage = 'Password is required';
+        passwordIsValid = false;
+      });
+    }else if(passwordController.text.length < 6){
+      setState(() {
+        passwordErrorMessage = 'Password must be at least 6 characters';
+        passwordIsValid = false;
+      });
+    }else{
+      setState(() {
+        passwordErrorMessage = '';
+        passwordIsValid = true;
+      });
+    }
+  }
+  
+  
   @override
   void initState() {
     // userAlreadyLoggedIn();
@@ -66,22 +104,59 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               children: [
                 TextFormField(
+                  controller: emailController,
                   decoration: InputDecoration(
                     hintText: 'Email',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
+                  onChanged: (value) {
+                    emailValidation();
+                  },
                 ),
+                if (emailErrorMessage.isNotEmpty)
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight(context) * 1),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: text(
+                          title: emailErrorMessage,
+                          fontSize: screenWidth(context) * 3,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
                 SizedBox(height: screenHeight(context) * 2),
                 TextFormField(
+                  controller: passwordController,
+                  obscureText: true,
                   decoration: InputDecoration(
                     hintText: 'Password',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
+                  onChanged: (value) {
+                    passwordValidation();
+                  },
                 ),
+                if (passwordErrorMessage.isNotEmpty)
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight(context) * 1),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: text(
+                          title: passwordErrorMessage,
+                          fontSize: screenWidth(context) * 3,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
                 SizedBox(height: screenHeight(context) * 2),
                 // remember me and forgot password
                 Row(
@@ -127,16 +202,51 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(
                   height: screenHeight(context) * 5,
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BottomNavigation(
-                            initialIndex: 0,
-                            onIndexChanged: (int value) {},
-                          ),
-                        ),
-                      );
+                    onPressed: () async{
+                      if (emailIsValid && passwordIsValid) {
+                        setState(() {
+                          emailLoading = true;
+                        });
+                        final AuthServices authService = AuthServices();
+
+                        // Sign in with email and password
+                        final UserCredential? userCredential = await authService.signInWithEmailAndPassword(
+                          emailController.text,
+                          passwordController.text,
+                        );
+                        if (userCredential != null) {
+                          // Authentication successful
+                          // Redirect or perform actions after successful login
+                          print('Authentication successful');
+                          if(!mounted) return;
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => BottomNavigation(
+                                initialIndex: 0,
+                                onIndexChanged: (int value) {},
+                              ),
+                            ),
+                          );
+                          print('userCredential: ${userCredential.user!.uid}');
+                        } else {
+                          // Authentication failed, show an error message
+                          print('Authentication failed');
+                          print('userCredential: $userCredential');
+                        }
+                      }
+                      setState(() {
+                        emailLoading = false;
+                      });
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => BottomNavigation(
+                      //       initialIndex: 0,
+                      //       onIndexChanged: (int value) {},
+                      //     ),
+                      //   ),
+                      // );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.lightPrimaryColor,
@@ -148,7 +258,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: text(
+                    child: emailLoading? CircularProgressIndicator(
+                      color: Colors.black,
+                      strokeWidth: 1,
+                    
+                    ):text(
                       title: 'Sign In',
                       fontSize: screenWidth(context) * 3.5,
                       fontWeight: FontWeight.w400,
@@ -209,6 +323,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               profileUrl: pictureUrl,
                             ),
                           );
+                          if(!mounted) return;
                           Navigator.push(
                             context,
                             MaterialPageRoute(
