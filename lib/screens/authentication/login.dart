@@ -1,19 +1,19 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:movie_tracker/global_widgets/responsive.dart';
+import 'package:movie_tracker/models/watch_list.dart';
 import 'package:movie_tracker/screens/authentication/forgot_password.dart';
 import 'package:movie_tracker/screens/authentication/register.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../global_widgets/appbar_widget.dart';
 import '../../global_widgets/text_widget.dart';
 import '../../network_connection/auth_services.dart';
 import '../../network_connection/google_sign_in.dart';
 import '../../theme/data.dart';
-import '../home/profile/profileData.dart';
 import 'bottom_narbar.dart';
-
-int indexForBottomBar = 0;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -55,26 +55,26 @@ class _LoginScreenState extends State<LoginScreen> {
       });
     }
   }
-  passwordValidation(){
-    if(passwordController.text.isEmpty){
+
+  passwordValidation() {
+    if (passwordController.text.isEmpty) {
       setState(() {
         passwordErrorMessage = 'Password is required';
         passwordIsValid = false;
       });
-    }else if(passwordController.text.length < 6){
+    } else if (passwordController.text.length < 6) {
       setState(() {
         passwordErrorMessage = 'Password must be at least 6 characters';
         passwordIsValid = false;
       });
-    }else{
+    } else {
       setState(() {
         passwordErrorMessage = '';
         passwordIsValid = true;
       });
     }
   }
-  
-  
+
   @override
   void initState() {
     // userAlreadyLoggedIn();
@@ -83,6 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final watchListModel = Provider.of<Watchlist>(context);
     return Scaffold(
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(screenHeight(context) * 8),
@@ -202,7 +203,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(
                   height: screenHeight(context) * 5,
                   child: ElevatedButton(
-                    onPressed: () async{
+                    onPressed: () async {
                       if (emailIsValid && passwordIsValid) {
                         setState(() {
                           emailLoading = true;
@@ -210,15 +211,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         final AuthServices authService = AuthServices();
 
                         // Sign in with email and password
-                        final UserCredential? userCredential = await authService.signInWithEmailAndPassword(
+                        final UserCredential? userCredential =
+                            await authService.signInWithEmailAndPassword(
                           emailController.text,
                           passwordController.text,
                         );
                         if (userCredential != null) {
                           // Authentication successful
                           // Redirect or perform actions after successful login
-                          print('Authentication successful');
-                          if(!mounted) return;
+                          watchListModel.updateListFromApi();
+                          if (!mounted) return;
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -228,7 +230,15 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           );
-                          print('userCredential: ${userCredential.user!.uid}');
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setString(
+                              'userId', userCredential.user!.uid);
+                          // await prefs.setString('name',
+                          //     userCredential.user!.displayName.toString());
+                          // await prefs.setString('profileUrl',
+                          //     userCredential.user!.photoURL.toString());
+                          // await prefs.setString(
+                          //     'email', userCredential.user!.email.toString());
                         } else {
                           // Authentication failed, show an error message
                           print('Authentication failed');
@@ -238,15 +248,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       setState(() {
                         emailLoading = false;
                       });
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => BottomNavigation(
-                      //       initialIndex: 0,
-                      //       onIndexChanged: (int value) {},
-                      //     ),
-                      //   ),
-                      // );
+                      emailController.clear();
+                      passwordController.clear();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.lightPrimaryColor,
@@ -258,16 +261,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: emailLoading? CircularProgressIndicator(
-                      color: Colors.black,
-                      strokeWidth: 1,
-                    
-                    ):text(
-                      title: 'Sign In',
-                      fontSize: screenWidth(context) * 3.5,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.black,
-                    ),
+                    child: emailLoading
+                        ? const CircularProgressIndicator(
+                            color: Colors.black,
+                            strokeWidth: 1,
+                          )
+                        : text(
+                            title: 'Sign In',
+                            fontSize: screenWidth(context) * 3.5,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.black,
+                          ),
                   ),
                 ),
                 SizedBox(height: screenHeight(context) * 2),
@@ -310,20 +314,39 @@ class _LoginScreenState extends State<LoginScreen> {
                             await GoogleSignInProvider().login();
                         if (userCredential != null) {
                           // Access the user's profile data
+                          // user id
+                          // check if present in users collection
+                          final user = await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(userCredential.user!.uid)
+                              .get();
+                          if (user.exists) {
+                            print('user exists');
+                          } else {
+                            print('user does not exist');
+                            await FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(userCredential.user!.uid)
+                                .set({
+                              'displayName': userCredential.user!.displayName,
+                              'email': userCredential.user!.email,
+                              'profileUrl': userCredential.user!.photoURL,
+                            });
+                          }
+
                           final profile =
                               userCredential.additionalUserInfo?.profile;
                           final pictureUrl = profile['picture'];
                           final email = userCredential.user.email;
                           final name = userCredential.user.displayName;
-                          final profileCubit = context.read<ProfileCubit>();
-                          profileCubit.setUserProfile(
-                            UserProfile(
-                              name: name,
-                              email: email,
-                              profileUrl: pictureUrl,
-                            ),
-                          );
-                          if(!mounted) return;
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setString(
+                              'userId', userCredential.user!.uid);
+                          await prefs.setString('name', name);
+                          await prefs.setString('profileUrl', pictureUrl);
+                          await prefs.setString('email', email);
+                          watchListModel.updateListFromApi();
+                          if (!mounted) return;
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -379,43 +402,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                   ),
                 ),
-                // SizedBox(height: screenHeight(context) * 5),
-                // SizedBox(
-                //   height: screenHeight(context) * 5,
-                //   child: ElevatedButton(
-                //     onPressed: () async {
-                //       await GoogleSignInProvider().login();
-                //       print('Logged out');
-                //     },
-                //     style: ElevatedButton.styleFrom(
-                //       backgroundColor: Colors.grey[300],
-                //       minimumSize: Size(
-                //         screenWidth(context) * 90,
-                //         screenHeight(context) * 6,
-                //       ),
-                //       shape: RoundedRectangleBorder(
-                //         borderRadius: BorderRadius.circular(10),
-                //       ),
-                //     ),
-                //     child: Row(
-                //       mainAxisAlignment: MainAxisAlignment.center,
-                //       children: [
-                //         // Image.asset(
-                //         //   'assets/images/google.png',
-                //         //   height: screenHeight(context) * 3,
-                //         //   width: screenWidth(context) * 5,
-                //         // ),
-                //         SizedBox(width: screenWidth(context) * 2),
-                //         text(
-                //           title: 'Logout',
-                //           fontSize: screenWidth(context) * 3.5,
-                //           fontWeight: FontWeight.w400,
-                //           color: Colors.black,
-                //         ),
-                //       ],
-                //     ),
-                //   ),
-                // ),
                 SizedBox(height: screenHeight(context) * 5),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -444,7 +430,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: screenHeight(context) * 5,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pushReplacement(
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const RegisterScreen(),

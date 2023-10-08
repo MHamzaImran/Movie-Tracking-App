@@ -112,8 +112,8 @@ class _BrowserScreenState extends State<BrowserScreen> {
         ),
       ),
       backgroundColor: Colors.white,
-      body: ListView(
-        physics: const NeverScrollableScrollPhysics(),
+      body: Column(
+        // physics: const NeverScrollableScrollPhysics(),
         children: [
           Padding(
             padding: EdgeInsets.symmetric(

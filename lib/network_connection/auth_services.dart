@@ -7,7 +7,7 @@ import '../global_widgets/toast_block.dart';
 class AuthServices {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn googleSignIn = GoogleSignIn();
-  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore fireStore = FirebaseFirestore.instance;
   // Create a variable to track user login status
   bool isLoggedIn = false;
 
@@ -33,13 +33,11 @@ class AuthServices {
     try {
       // Trigger the authentication flow
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      print('googleUser: $googleUser');
 
       // Obtain the auth details from the request
       final GoogleSignInAuthentication? googleAuth =
           await googleUser?.authentication;
 
-      print('googleAuth: $googleAuth');
 
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
@@ -55,18 +53,18 @@ class AuthServices {
       isLoggedIn = true;
       userData = userCredential.user;
 
-      // Store user data in Firestore
-      await firestore.collection('users').doc(userCredential.user!.uid).set({
+      // Store user data in FireStore
+      await fireStore.collection('users').doc(userCredential.user!.uid).set({
         'email': userCredential.user!.email,
+        'displayName': userCredential.user!.displayName,
+        'photoURL': userCredential.user!.photoURL,
         // Add other user data as needed
       });
-      
       await createWatchListCollectionIfNotExists(userCredential.user!.uid);
 
       return userCredential;
     } catch (error) {
       // Handle any errors that occur during the sign-in process
-      print("Error signing in with Google: $error");
       return null; // Return null on error
     }
   }
@@ -84,7 +82,6 @@ class AuthServices {
       isLoggedIn = false;
       userData = null;
 
-      print('User signed out successfully.');
     } catch (error) {
       print('Error signing out: $error');
     }
@@ -102,33 +99,34 @@ class AuthServices {
       userData = userCredential.user;
 
       // Store user data in Firestore
-      await firestore.collection('users').doc(userCredential.user!.uid).set({
-        'email': userCredential.user!.email,
-        // Add other user data as needed
-      });
+      // await firestore.collection('users').doc(userCredential.user!.uid).set({
+      //   'email': userCredential.user!.email,
+      //   'displayName': userCredential.user!.displayName,
+      //   'photoURL': userCredential.user!.photoURL,
+      //   // Add other user data as needed
+      // });
 
       await createWatchListCollectionIfNotExists(userCredential.user!.uid);
 
       return userCredential;
     } catch (error) {
       // Handle errors
-      print("Error signing in with email/password: $error");
       toastBlock('Invalid email or password');
       return null;
     }
   }
 
   // Register a new user with email and password
-  Future registerWithEmailAndPassword(String email, String password) async {
+  Future registerWithEmailAndPassword(String name, String email, String password) async {
     try {
       final UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
-
       // If registration is successful, userCredential will contain user information.
       final User? user = userCredential.user;
       if (user != null) {
         // User registered successfully.
-        print('User registered: ${user.uid}');
+        await storeUserDataInFirestore(user.uid, name, email, '');
+        return userCredential;
       } else {}
     } catch (e) {
       // Use a regular expression to extract the message inside square brackets
@@ -148,7 +146,6 @@ class AuthServices {
   Future<void> storeUserDataInFirestore(
       String uid, String displayName, String email, String photoURL) async {
     try {
-      // Reference to Firestore collection
       final userCollection = FirebaseFirestore.instance.collection('users');
 
       // Create a document for the user using their UID
@@ -159,7 +156,6 @@ class AuthServices {
         // Add more user data as needed
       });
 
-      print('User data stored in Firestore.');
     } catch (error) {
       print('Error storing user data in Firestore: $error');
     }

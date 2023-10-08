@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:movie_tracker/global_widgets/appbar_widget.dart';
@@ -26,16 +24,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool showLoading = false;
-  int randomIndex = 11;
-  final List<String> images = [
-    'https://images.unsplash.com/photo-1586882829491-b81178aa622e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2850&q=80',
-    'https://images.unsplash.com/photo-1586871608370-4adee64d1794?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2862&q=80',
-    'https://images.unsplash.com/photo-1586901533048-0e856dff2c0d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1650&q=80',
-    'https://images.unsplash.com/photo-1586902279476-3244d8d18285?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2850&q=80',
-    'https://images.unsplash.com/photo-1586943101559-4cdcf86a6f87?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1556&q=80',
-    'https://images.unsplash.com/photo-1586951144438-26d4e072b891?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1650&q=80',
-    'https://images.unsplash.com/photo-1586953983027-d7508a64f4bb?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1650&q=80',
-  ];
 
   getPopularMovies() async {
     var response =
@@ -81,12 +69,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  int generateRandomNumber() {
-    final random = Random();
-    // Generate a random number between 0 and 9 and add 11 to it
-    return random.nextInt(10) + 11;
-  }
-
   getAllData() async {
     try {
       setState(() {
@@ -97,9 +79,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (topRatedMovies.isEmpty) await getTopRatedMovies();
       if (upcomingMovies.isEmpty) await getUpcomingMovies();
       if (sliderMovies.isEmpty) await getSliderImages();
-      randomIndex = generateRandomNumber();
     } catch (e) {
-      print(e);
+      print('Error in Home Screen: $e');
     } finally {
       setState(() {
         showLoading = false;
@@ -109,11 +90,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      for (var imageUrl in images) {
-        precacheImage(NetworkImage(imageUrl), context);
-      }
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   for (var imageUrl in images) {
+    //     precacheImage(NetworkImage(imageUrl), context);
+    //   }
+    // });
     getAllData();
     super.initState();
   }
@@ -129,6 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // print(sliderMovies[2]['known_for'].length);
     // print(sliderMovies[2]['known_for']);
     // print(sliderMovies[2]['known_for'][1]['original_title']);
+    // print("Slider Movies: $sliderMovies");
     return Scaffold(
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(screenHeight(context) * 8),
@@ -154,10 +136,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     // enlargeCenterPage: true,
                   ),
                   itemBuilder: (context, index, realIdx) {
-                    return Stack(
-                      children: [
-                        Expanded(
-                          child: Opacity(
+                    return SizedBox(
+                      width: screenWidth(context) * 100,
+                      height: screenHeight(context) * 40,
+                      child: Stack(
+                        children: [
+                          Opacity(
                             opacity: 0.9,
                             child: Image(
                               image: NetworkImage(
@@ -168,72 +152,73 @@ class _HomeScreenState extends State<HomeScreen> {
                               fit: BoxFit.fitHeight,
                             ),
                           ),
-                        ),
-                        // movie title
-                        Positioned(
-                          bottom: screenHeight(context) * 0,
-                          left: screenWidth(context) * 5,
-                          child: SizedBox(
-                            width: screenWidth(context) * 90,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                text(
-                                  title: sliderMovies[index]['original_title'],
-                                  fontSize: screenWidth(context) * 4,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppTheme.lightPrimaryColor,
-                                ),
-                                SizedBox(height: screenHeight(context) * 1),
-                                text(
-                                  title: sliderMovies[index]['overview'],
-                                  fontSize: screenWidth(context) * 3,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                  maxLines: 3,
-                                ),
-                                SizedBox(height: screenHeight(context) * 1),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    // Navigator.push(
-                                    //   context,
-                                    //   MaterialPageRoute(
-                                    //     builder: (context) => const CarouselDemo(),
-                                    //   ),
-                                    // );
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => DetailScreen(
-                                          id: sliderMovies[index]['id'],
-                                        ),
-                                      ),
-                                    );
-                                    print(
-                                        sliderMovies[index]['id']);
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppTheme.lightPrimaryColor,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10)),
+                          // movie title
+                          Positioned(
+                            bottom: screenHeight(context) * 0,
+                            left: screenWidth(context) * 5,
+                            child: SizedBox(
+                              width: screenWidth(context) * 90,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  text(
+                                    title: sliderMovies[index]
+                                        ['original_title'],
+                                    fontSize: screenWidth(context) * 4,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppTheme.lightPrimaryColor,
                                   ),
-                                  child: text(
-                                    title: 'See More',
+                                  SizedBox(height: screenHeight(context) * 1),
+                                  text(
+                                    title: sliderMovies[index]['overview'],
                                     fontSize: screenWidth(context) * 3,
                                     fontWeight: FontWeight.w500,
-                                    color: Colors.black,
+                                    color: Colors.white,
+                                    maxLines: 3,
                                   ),
-                                )
-                              ],
+                                  SizedBox(height: screenHeight(context) * 1),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      // Navigator.push(
+                                      //   context,
+                                      //   MaterialPageRoute(
+                                      //     builder: (context) => const CarouselDemo(),
+                                      //   ),
+                                      // );
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => DetailScreen(
+                                            id: sliderMovies[index]['id'],
+                                          ),
+                                        ),
+                                      );
+                                      // print(
+                                      //     sliderMovies[index]['id']);
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          AppTheme.lightPrimaryColor,
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10)),
+                                    ),
+                                    child: text(
+                                      title: 'See More',
+                                      fontSize: screenWidth(context) * 3,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.black,
+                                    ),
+                                  )
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     );
                   },
                 ),
-                // top 10 movies and see more
                 SizedBox(height: screenHeight(context) * 3),
                 Padding(
                   padding: EdgeInsets.symmetric(
@@ -245,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: screenWidth(context) * 50,
                         child: Image(
                           image: NetworkImage(
-                            "https://image.tmdb.org/t/p/w500/${sliderMovies[randomIndex]['backdrop_path']}",
+                            "https://image.tmdb.org/t/p/w500/${sliderMovies[11]['backdrop_path']}",
                           ),
                           height: screenHeight(context) * 22,
                           fit: BoxFit.fill,
@@ -262,14 +247,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               text(
-                                title: sliderMovies[randomIndex]
-                                    ['original_title'],
+                                title: sliderMovies[11]['original_title'] ?? '',
                                 fontSize: screenWidth(context) * 3.5,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.black,
                               ),
                               text(
-                                title: sliderMovies[randomIndex]['overview'],
+                                title: sliderMovies[11]['overview'] ?? '',
                                 fontSize: screenWidth(context) * 3,
                                 fontWeight: FontWeight.w400,
                                 color: Colors.black,
@@ -286,7 +270,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   SizedBox(width: screenWidth(context) * 1),
                                   text(
                                     title:
-                                        "${sliderMovies[randomIndex]['vote_average']} (${sliderMovies[randomIndex]['vote_count']})",
+                                        "${sliderMovies[11]['vote_average'] ?? ''} (${sliderMovies[11]['vote_count'] ?? ''})",
                                     fontSize: screenWidth(context) * 3,
                                     fontWeight: FontWeight.w400,
                                     color: Colors.black,
@@ -298,11 +282,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) =>
-                                          DetailScreen(id: sliderMovies[randomIndex]['id'],),
+                                      builder: (context) => DetailScreen(
+                                        id: sliderMovies[11]['id'],
+                                      ),
                                     ),
                                   );
-                                  print(sliderMovies[randomIndex]['id']);
                                 },
                                 child: Card(
                                   elevation: 0,
@@ -365,13 +349,14 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: movieList.length,
             itemBuilder: (context, index) {
               return GestureDetector(
-                onTap: (){
-                  print(movieList[index]['id']);
+                onTap: () {
+                  // print(movieList[index]['id']);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          DetailScreen(id: movieList[index]['id'],),
+                      builder: (context) => DetailScreen(
+                        id: movieList[index]['id'],
+                      ),
                     ),
                   );
                 },
@@ -428,7 +413,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => ListScreen(
-                    title: title, mediaType: 'movie',
+                    title: title,
+                    mediaType: 'movie',
                   ),
                 ),
               );

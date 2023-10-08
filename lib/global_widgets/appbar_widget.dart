@@ -8,14 +8,14 @@ class AppBarWidget extends StatelessWidget {
   final String title;
   final bool centerTitle;
   final Color backgroundColor;
-  final actions;
+  final List<Widget> actions;
   final bool showBackButton;
   const AppBarWidget({
     super.key,
     required this.title,
     this.centerTitle = true,
     this.backgroundColor = const Color(0xFFF5C418),
-    this.actions, this.showBackButton = false,
+    this.actions = const[], this.showBackButton = false,
   });
 
   @override
@@ -36,7 +36,7 @@ class AppBarWidget extends StatelessWidget {
         icon: const Icon(Icons.arrow_back_ios,color: Colors.black,),
       ) : null,
       toolbarHeight: screenHeight(context) * 8,
-      actions: actions,
+      actions: actions == [] ? null : actions,
     );
   }
 }

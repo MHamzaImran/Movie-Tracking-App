@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:movie_tracker/global_widgets/toast_block.dart';
+import 'package:movie_tracker/models/watch_list.dart';
+import 'package:provider/provider.dart';
 import '../../global_widgets/responsive.dart';
 import '../../global_widgets/text_widget.dart';
 import '../../network_connection/network.dart';
+import '../../network_connection/watchList_table.dart';
 import '../../theme/data.dart';
 
 class DetailScreen extends StatefulWidget {
@@ -21,6 +25,7 @@ class _DetailScreenState extends State<DetailScreen> {
   var similarMovies = {};
   bool showLoading = false;
   String selectedButton = 'Details';
+  bool isWatchList = false;
 
   getMovieData() async {
     var response = {};
@@ -28,7 +33,6 @@ class _DetailScreenState extends State<DetailScreen> {
       response = await Network().get('/3/movie/${widget.id}');
     } else if (widget.mediaType == 'tv') {
       response = await Network().get('/3/tv/${widget.id}');
-      print(response);
     } else {
       response = await Network().get('/3/movie/${widget.id}');
       setState(() {
@@ -37,7 +41,6 @@ class _DetailScreenState extends State<DetailScreen> {
     }
     setState(() {
       movieData = response;
-      // print(sliderMovies);
     });
   }
 
@@ -52,7 +55,6 @@ class _DetailScreenState extends State<DetailScreen> {
     }
     setState(() {
       movieReviews = response;
-      // print(sliderMovies);
     });
   }
 
@@ -67,7 +69,6 @@ class _DetailScreenState extends State<DetailScreen> {
     }
     setState(() {
       movieCredits = response;
-      // print(sliderMovies);
     });
   }
 
@@ -77,17 +78,14 @@ class _DetailScreenState extends State<DetailScreen> {
       response = await Network()
           .get('/3/movie/${widget.id}/similar?language=en-US&page=1');
     } else if (widget.mediaType == 'tv') {
-      print('Getting TV Data');
       response = await Network()
           .get('/3/tv/${widget.id}/similar?language=en-US&page=1');
     } else {
       response = await Network()
           .get('/3/movie/${widget.id}/similar?language=en-US&page=1');
     }
-    // print(response);
     setState(() {
       similarMovies = response;
-      // print(sliderMovies);
     });
   }
 
@@ -117,11 +115,7 @@ class _DetailScreenState extends State<DetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print(widget.id);
-    print(widget.mediaType);
-    // print(similarMovies['results'][0]['original_title']);
-    // getSimilarMovies();
-    // print(similarMovies);
+    final watchListModel = Provider.of<Watchlist>(context);
     return Scaffold(
         body: showLoading
             ? const Center(
@@ -131,10 +125,12 @@ class _DetailScreenState extends State<DetailScreen> {
               )
             : ListView(
                 children: [
-                  Stack(
-                    children: [
-                      Expanded(
-                        child: Opacity(
+                  SizedBox(
+                    height: screenHeight(context) * 25,
+                    width: screenWidth(context) * 100,
+                    child: Stack(
+                      children: [
+                        Opacity(
                           opacity: 0.8, // Adjust the opacity value (0.0 to 1.0)
                           child: Image(
                             image: NetworkImage(
@@ -144,48 +140,49 @@ class _DetailScreenState extends State<DetailScreen> {
                                 .fitWidth, // Adjust the fit property as needed
                           ),
                         ),
-                      ),
-                      // movie title
-                      Positioned(
-                        bottom: screenHeight(context) * 0,
-                        left: screenWidth(context) * 5,
-                        child: SizedBox(
-                          width: screenWidth(context) * 90,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              text(
-                                title: movieData['original_title'] ?? '',
-                                fontSize: screenWidth(context) * 4,
-                                fontWeight: FontWeight.w500,
-                                color: AppTheme.lightPrimaryColor,
-                              ),
-                              SizedBox(height: screenHeight(context) * 1),
-                              // rating and duration
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.star,
-                                    color: AppTheme.lightPrimaryColor,
-                                    size: screenWidth(context) * 4,
-                                  ),
-                                  SizedBox(width: screenWidth(context) * 1),
-
-                                  text(
-                                    title:
-                                        '${movieData['vote_average'] ?? ''} (IMDB)',
-                                    fontSize: screenWidth(context) * 3,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppTheme.lightPrimaryColor,
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: screenHeight(context) * 2),
-                            ],
+                        // movie title
+                        Positioned(
+                          bottom: screenHeight(context) * 0,
+                          left: screenWidth(context) * 5,
+                          child: SizedBox(
+                            width: screenWidth(context) * 90,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                text(
+                                  title: movieData['original_title'] ??
+                                      movieData['name'] ??
+                                      '',
+                                  fontSize: screenWidth(context) * 4,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppTheme.lightPrimaryColor,
+                                ),
+                                SizedBox(height: screenHeight(context) * 1),
+                                // rating and duration
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.star,
+                                      color: AppTheme.lightPrimaryColor,
+                                      size: screenWidth(context) * 4,
+                                    ),
+                                    SizedBox(width: screenWidth(context) * 1),
+                                    text(
+                                      title:
+                                          '${movieData['vote_average'] ?? ''} (IMDB)',
+                                      fontSize: screenWidth(context) * 3,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppTheme.lightPrimaryColor,
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: screenHeight(context) * 2),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   Padding(
                     padding: EdgeInsets.symmetric(
@@ -204,7 +201,8 @@ class _DetailScreenState extends State<DetailScreen> {
                       ),
                     ),
                   ),
-                  if (selectedButton == 'Details') detailsSection(context),
+                  if (selectedButton == 'Details')
+                    detailsSection(context, watchListModel),
                   if (selectedButton == 'Reviews') reviewSection(context),
                   if (selectedButton == 'Credits') creditSection(context),
                   SizedBox(height: screenHeight(context) * 10),
@@ -217,24 +215,26 @@ class _DetailScreenState extends State<DetailScreen> {
       padding: EdgeInsets.symmetric(
         horizontal: screenWidth(context) * 5,
       ),
-      child: (value.isEmpty)?const SizedBox():Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          text(
-            title: title,
-            fontSize: screenWidth(context) * 3.5,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
-          ),
-          SizedBox(height: screenHeight(context) * 1),
-          text(
-              title: value,
-              fontSize: screenWidth(context) * 3.5,
-              fontWeight: FontWeight.w400,
-              color: Colors.black,
-              maxLines: 3),
-        ],
-      ),
+      child: (value.isEmpty)
+          ? const SizedBox()
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                text(
+                  title: title,
+                  fontSize: screenWidth(context) * 3.5,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+                SizedBox(height: screenHeight(context) * 1),
+                text(
+                    title: value,
+                    fontSize: screenWidth(context) * 3.5,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black,
+                    maxLines: 3),
+              ],
+            ),
     );
   }
 
@@ -276,7 +276,7 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  detailsSection(BuildContext context) {
+  detailsSection(BuildContext context, Watchlist watchListModel) {
     return movieData != null
         ? Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,32 +391,70 @@ class _DetailScreenState extends State<DetailScreen> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.lightPrimaryColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                screenWidth(context) * 2,
+                        child: SizedBox(
+                          height: screenHeight(context) * 4.5,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              String result = 'Something went wrong';
+                              try {
+                                setState(() {
+                                  isWatchList = true;
+                                });
+                                MovieItem item = MovieItem(
+                                    widget.id,
+                                    movieData['original_title'] ??
+                                        movieData['name'],
+                                    widget.mediaType,
+                                    movieData['poster_path']);
+                                result =
+                                    await watchListModel.addToWatchlist(item);
+
+                                toastBlock(result);
+                              } catch (e) {
+                                print(e);
+                                toastBlock(result);
+                              } finally {
+                                setState(() {
+                                  isWatchList = false;
+                                });
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.lightPrimaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  screenWidth(context) * 2,
+                                ),
                               ),
                             ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.add,
-                                color: Colors.black,
-                                size: screenWidth(context) * 4,
-                              ),
-                              SizedBox(width: screenWidth(context) * 2),
-                              text(
-                                title: 'Add to Watchlist',
-                                fontSize: screenWidth(context) * 3,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black,
-                              ),
-                            ],
+                            child: isWatchList
+                                ? Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(
+                                          screenWidth(context) * 1),
+                                      child: const CircularProgressIndicator(
+                                        color: Colors.black,
+                                        strokeWidth: 1,
+                                      ),
+                                    ),
+                                  )
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.add,
+                                        color: Colors.black,
+                                        size: screenWidth(context) * 4,
+                                      ),
+                                      SizedBox(width: screenWidth(context) * 2),
+                                      text(
+                                        title: 'Add to Watchlist',
+                                        fontSize: screenWidth(context) * 3,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black,
+                                      ),
+                                    ],
+                                  ),
                           ),
                         ),
                       ),

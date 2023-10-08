@@ -1,8 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:movie_tracker/models/watch_list.dart';
 import 'package:movie_tracker/screens/authentication/login.dart';
-import 'package:movie_tracker/screens/home/profile/profileData.dart';
+import 'package:provider/provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -10,11 +10,7 @@ Future<void> main() async {
   await Firebase.initializeApp();
 
   runApp(
-    BlocProvider(
-      create: (context) =>
-          ProfileCubit(), // Create your ProfileCubit instance here
-      child: const MyApp(),
-    ),
+    const MyApp(),
   );
 }
 
@@ -23,12 +19,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-        value: context.read<ProfileCubit>(),
-        child: const MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Movie Tracking App',
-          home: LoginScreen(),
-        ));
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => Watchlist()),
+      ],
+      child: const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Movie Tracking App',
+        home: LoginScreen(),
+      ),
+    );
   }
 }

@@ -1,5 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="hamzaimran.com.movie_tracker">
+    
+    <!--Internet Permission-->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
 
     <application
         android:label="movie_tracker"

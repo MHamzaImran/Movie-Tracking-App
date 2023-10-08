@@ -2,12 +2,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:movie_tracker/global_widgets/responsive.dart';
 import 'package:movie_tracker/global_widgets/toast_block.dart';
-import 'package:movie_tracker/screens/authentication/login.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../global_widgets/appbar_widget.dart';
 import '../../global_widgets/text_widget.dart';
+import '../../models/watch_list.dart';
 import '../../network_connection/auth_services.dart';
 import '../../theme/data.dart';
+import 'bottom_narbar.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -17,17 +20,34 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  TextEditingController nameController = TextEditingController();
+  String nameErrorMessage = '';
   TextEditingController emailController = TextEditingController();
   String emailErrorMessage = '';
   TextEditingController passwordController = TextEditingController();
   String passwordErrorMessage = '';
   TextEditingController confirmPasswordController = TextEditingController();
   String confirmPasswordErrorMessage = '';
+  bool nameIsValid = false;
   bool emailIsValid = false;
   bool passwordIsValid = false;
   bool confirmPasswordIsValid = false;
 
   bool isLoading = false;
+
+  nameValidation() {
+    if (nameController.text.isEmpty) {
+      setState(() {
+        nameErrorMessage = 'Name is required';
+        nameIsValid = false;
+      });
+    }else{
+      setState(() {
+        nameErrorMessage = '';
+        nameIsValid = true;
+      });
+    }
+  }
 
   emailValidation() {
     if (emailController.text.isEmpty) {
@@ -94,6 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final watchListModel = Provider.of<Watchlist>(context);
     return Scaffold(
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(screenHeight(context) * 8),
@@ -115,6 +136,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
             padding: EdgeInsets.symmetric(horizontal: screenWidth(context) * 5),
             child: Column(
               children: [
+                TextFormField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    hintText: 'Name',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    nameValidation();
+                  },
+                ),
+                if (nameErrorMessage.isNotEmpty)
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight(context) * 1),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: text(
+                          title: nameErrorMessage,
+                          fontSize: screenWidth(context) * 3,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                SizedBox(height: screenHeight(context) * 2),
                 TextFormField(
                   controller: emailController,
                   decoration: InputDecoration(
@@ -202,17 +250,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   height: screenHeight(context) * 5,
                   child: ElevatedButton(
                     onPressed: () async {
-                      if (emailIsValid &&
+                      if (nameIsValid &&
+                          emailIsValid &&
                           passwordIsValid &&
                           confirmPasswordIsValid) {
                         try {
                           setState(() {
                             isLoading = true;
                           });
+                          FocusScope.of(context).unfocus();
                           final AuthServices authService = AuthServices();
                           // Sign in with email and password
                           final UserCredential? userCredential =
                               await authService.registerWithEmailAndPassword(
+                                nameController.text,
                             emailController.text,
                             passwordController.text,
                           );
@@ -220,10 +271,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             // Authentication successful
                             // Redirect or perform actions after successful login
                             toastBlock('User registered successfully');
-                            Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const LoginScreen()));
+                            watchListModel.updateListFromApi();
+                            if (!mounted) return;
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => BottomNavigation(
+                                  initialIndex: 0,
+                                  onIndexChanged: (int value) {},
+                                ),
+                              ),
+                            );
+
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setString(
+                                'userId', userCredential.user!.uid);
+                            await prefs.setString('name',
+                                userCredential.user!.displayName.toString());
+                            await prefs.setString('profileUrl',
+                                userCredential.user!.photoURL.toString());
+                            await prefs.setString(
+                                'email', userCredential.user!.email.toString());
                           }
                         } catch (e) {
                           print(e);
@@ -253,9 +322,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: isLoading
                         ? Padding(
                             padding: EdgeInsets.all(screenWidth(context) * 1),
-                            child: CircularProgressIndicator(
-                              color: Colors.black,
+                            child: const CircularProgressIndicator(
                               strokeWidth: 1,
+                              color: Colors.black,
                             ),
                           )
                         : text(
@@ -294,10 +363,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   height: screenHeight(context) * 5,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const LoginScreen()));
+                      Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
