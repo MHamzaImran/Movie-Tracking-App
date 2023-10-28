@@ -1,0 +1,24 @@
+flutter_native_splash:
+  color: "#000000"
+  android_disable_fullscreen: true
+  android: true
+  ios: true
+  
+  android_gravity: fill
+  #  pink
+  #  icon_background_color: "#e308f4"
+  
+  #  green
+  #  icon_background_color_dark: "#02f90b"
+  
+  android_12:
+    # The image parameter sets the splash screen icon image.  If this parameter is not specified,
+    # the app's launcher icon will be used instead.
+    # Please note that the splash screen will be clipped to a circle on the center of the screen.
+    # App icon with an icon background: This should be 960×960 pixels, and fit within a circle
+    # 640 pixels in diameter.
+    # App icon without an icon background: This should be 1152×1152 pixels, and fit within a circle
+    # 768 pixels in diameter.
+    image: assets/logo.png
+
+#_dark_ios: assets/dart_dark-ios.gif

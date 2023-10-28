@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:movie_tracker/global_widgets/toast_block.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 
 import '../../../global_widgets/appbar_widget.dart';
 import '../../../global_widgets/responsive.dart';
 import '../../../global_widgets/text_widget.dart';
+import '../../../models/theme.dart';
 import '../../../theme/data.dart';
 
 class EditProfile extends StatefulWidget {
@@ -121,6 +123,7 @@ class _EditProfileState extends State<EditProfile> {
 
   @override
   Widget build(BuildContext context) {
+    final themeController = Provider.of<ThemeController>(context);
     return Scaffold(
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(screenHeight(context) * 8),
@@ -129,6 +132,7 @@ class _EditProfileState extends State<EditProfile> {
             centerTitle: false,
             showBackButton: true,
           )),
+      backgroundColor: themeController.backgroundColor,
       body: Column(
         children: [
           SizedBox(
@@ -150,9 +154,9 @@ class _EditProfileState extends State<EditProfile> {
                 child: Container(
                   height: screenHeight(context) * 5,
                   width: screenWidth(context) * 10,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white,
+                    color: themeController.textColor,
                   ),
                   child: InkWell(
                     onTap: () {
@@ -163,8 +167,8 @@ class _EditProfileState extends State<EditProfile> {
                               height: screenWidth(context) * 41,
                               padding: EdgeInsets.symmetric(
                                   vertical: screenWidth(context) * 3),
-                              decoration: const BoxDecoration(
-                                color: AppTheme.lightTextColor,
+                              decoration: BoxDecoration(
+                                color: themeController.backgroundColor,
                               ),
                               child: Column(
                                 children: [
@@ -175,7 +179,7 @@ class _EditProfileState extends State<EditProfile> {
                                     },
                                     leading: Icon(
                                       Icons.camera_alt,
-                                      color: AppTheme.lightTextColor,
+                                      color: themeController.textColor,
                                       size: screenWidth(context) * 6,
                                     ),
                                     dense: true,
@@ -198,7 +202,7 @@ class _EditProfileState extends State<EditProfile> {
                                     },
                                     leading: Icon(
                                       Icons.image,
-                                      color: AppTheme.lightTextColor,
+                                      color: themeController.textColor,
                                       size: screenWidth(context) * 6,
                                     ),
                                     dense: true,
@@ -212,9 +216,9 @@ class _EditProfileState extends State<EditProfile> {
                             );
                           });
                     },
-                    child: const Icon(
+                    child: Icon(
                       Icons.camera_alt,
-                      color: Colors.black,
+                      color: themeController.cardColor,
                     ),
                   ),
                 ),
@@ -230,16 +234,23 @@ class _EditProfileState extends State<EditProfile> {
                 vertical: screenHeight(context) * 1),
             child: TextFormField(
               controller: nameController,
+              style: TextStyle(
+                color: themeController.textColor,
+              ),
               decoration: InputDecoration(
                 hintText: 'Name',
+                hintStyle: TextStyle(
+                  color: themeController.textColor,
+                ),
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                    color: Theme.of(context).textTheme.bodyLarge!.color!,
+                    color: themeController.textColor,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                    color: Theme.of(context).textTheme.bodyLarge!.color!,
+                    
+                    color: themeController.textColor,
                   ),
                 ),
               ),

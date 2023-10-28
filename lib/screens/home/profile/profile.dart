@@ -12,7 +12,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../global_widgets/appbar_widget.dart';
 import '../../../global_widgets/text_widget.dart';
+import '../../../models/theme.dart';
 import '../../../network_connection/google_sign_in.dart';
+import '../../../theme/data.dart';
 import 'edit.dart';
 
 List<MovieItem> watchList = [];
@@ -57,6 +59,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final watchListModel = Provider.of<Watchlist>(context);
+    final themeController = Provider.of<ThemeController>(context);
     return Scaffold(
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(screenHeight(context) * 8),
@@ -64,56 +67,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: 'Profile',
             centerTitle: false,
           )),
-      backgroundColor: Colors.white,
-      body: Column(
+      backgroundColor: themeController.backgroundColor,
+      body: ListView(
         children: [
           SizedBox(
-            height: screenHeight(context) * 2,
-          ),
-          SizedBox(
-            width: screenWidth(context) * 30,
-            height: screenWidth(context) * 30,
-            child: Card(
-              // color: AppTheme.lightPrimaryColor,
-              elevation: 0,
-              child: ClipRRect(
-                  borderRadius:
-                      BorderRadius.circular(100), // Same radius as Card
-                  child: profileUrl.isEmpty || profileUrl == 'null'
-                      ? Image.asset(
-                          'assets/profile.png',
-                          fit: BoxFit.cover,
-                        )
-                      : profileUrl.contains('http')
-                          ? Image.network(profileUrl)
-                          : Image.memory(
-                              base64Decode(profileUrl),
-                              fit: BoxFit.cover,
-                            )),
+            height: screenHeight(context) * 27,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: screenHeight(context) * 2,
+                ),
+                SizedBox(
+                  height: screenWidth(context) * 30,
+                  width: screenWidth(context) * 30,
+                  child: Card(
+                    color: themeController.backgroundColor,
+                    // color: AppTheme.lightPrimaryColor,
+                    elevation: 0,
+                    child: ClipRRect(
+                        borderRadius:
+                            BorderRadius.circular(1000), // Same radius as Card
+                        child: profileUrl.isEmpty || profileUrl == 'null'
+                            ? Image.asset(
+                                'assets/profile.png',
+                                fit: BoxFit.cover,
+                              )
+                            : profileUrl.contains('http')
+                                ? Image.network(profileUrl)
+                                : Image.memory(
+                                    base64Decode(profileUrl),
+                                    fit: BoxFit.cover,
+                                  )),
+                  ),
+                ),
+                SizedBox(
+                  height: screenHeight(context) * 2,
+                ),
+                text(
+                    title: name == '' ? 'Guest User' : name,
+                    color: themeController.textColor,
+                    fontSize: screenWidth(context) * 4,
+                    fontWeight: FontWeight.bold),
+                SizedBox(height: screenHeight(context) * 2),
+                text(
+                  title: email,
+                  color: themeController.textColor,
+                  fontSize: screenWidth(context) * 3.5,
+                ),
+                // SizedBox(height: screenHeight(context) * 5),
+              ],
             ),
           ),
-          SizedBox(
-            height: screenHeight(context) * 2,
-          ),
-          text(
-              title: name == '' ? 'Guest User' : name,
-              color: Colors.black,
-              fontSize: screenWidth(context) * 4,
-              fontWeight: FontWeight.bold),
-          SizedBox(height: screenHeight(context) * 2),
-          text(
-            title: email,
-            color: Colors.black,
-            fontSize: screenWidth(context) * 3.5,
-          ),
-          SizedBox(height: screenHeight(context) * 5),
           Container(
             height: 1,
             width: screenWidth(context) * 100,
             color: Colors.grey.withOpacity(0.5),
           ),
-
-          SizedBox(height: screenHeight(context) * 5),
+          SizedBox(height: screenHeight(context) * 2),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: screenWidth(context) * 5),
             child: Row(
@@ -123,13 +133,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Icon(
                   Icons.account_circle,
                   size: screenWidth(context) * 7,
+                  color: themeController.textColor,
                 ),
                 SizedBox(width: screenWidth(context) * 5),
                 text(
                   title: 'Edit Profile',
                   fontSize: screenWidth(context) * 3.5,
                   fontWeight: FontWeight.w500,
-                  color: Colors.black,
+                  color: themeController.textColor,
                 ),
                 const Spacer(),
                 InkWell(
@@ -144,18 +155,100 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     profilePic: profileUrl,
                                   ))).then((value) => retrieveUserData());
                     },
-                    child: Icon(Icons.arrow_forward_ios,
-                        size: screenWidth(context) * 4)),
+                    child: Icon(
+                      Icons.arrow_forward_ios,
+                      size: screenWidth(context) * 4,
+                      color: themeController.textColor,
+                    )),
               ],
             ),
           ),
-
-          SizedBox(height: screenHeight(context) * 3),
-          section(context, 'Watchlist', watchListModel),
+          SizedBox(height: screenHeight(context) * 2),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: screenWidth(context) * 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                // dark or light mode
+                Icon(
+                  Icons.brightness_6,
+                  size: screenWidth(context) * 7,
+                  color: themeController.textColor,
+                ),
+                SizedBox(width: screenWidth(context) * 5),
+                text(
+                  title: 'Theme',
+                  fontSize: screenWidth(context) * 3.5,
+                  fontWeight: FontWeight.w500,
+                  color: themeController.textColor,
+                ),
+                const Spacer(),
+                InkWell(
+                  onTap: () {
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            backgroundColor: themeController.cardColor,
+                            title: text(
+                              title: 'Choose Theme',
+                              fontSize: screenWidth(context) * 4,
+                              fontWeight: FontWeight.bold,
+                              color: themeController.textColor,
+                            ),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ListTile(
+                                  onTap: () async {
+                                    themeController.setLightTheme();
+                                    Navigator.pop(context);
+                                  },
+                                  title: text(
+                                    title: 'Light',
+                                    fontSize: screenWidth(context) * 4,
+                                    fontWeight: FontWeight.bold,
+                                    color: themeController.textColor,
+                                  ),
+                                  trailing: Icon(
+                                    Icons.wb_sunny,
+                                    color: themeController.textColor,
+                                  ),
+                                ),
+                                ListTile(
+                                  onTap: () async {
+                                    // final prefs =
+                                    //     await SharedPreferences.getInstance();
+                                    // prefs.setBool('isDark', true);
+                                    // Navigator.pop(context);
+                                    // setState(() {});
+                                    themeController.setDarkTheme();
+                                    Navigator.pop(context);
+                                  },
+                                  title: text(
+                                      title: 'Dark',
+                                      fontSize: screenWidth(context) * 4,
+                                      fontWeight: FontWeight.bold,color: themeController.textColor,),
+                                  trailing: Icon(Icons.nightlight_round,color: themeController.textColor,),
+                                ),
+                              ],
+                            ),
+                          );
+                        });
+                  },
+                  child: Icon(
+                    Icons.arrow_forward_ios,
+                    size: screenWidth(context) * 4,
+                    color: themeController.textColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: screenHeight(context) * 2),
+          section(context, 'Watchlist', watchListModel, themeController),
           if (watchListModel.itemCount > 0)
             SizedBox(height: screenHeight(context) * 3),
-          const Spacer(),
-          // logout button
           Container(
             width: double.infinity,
             height: screenHeight(context) * 5,
@@ -215,7 +308,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  section(BuildContext context, String title, Watchlist watchListModel) {
+  section(BuildContext context, String title, Watchlist watchListModel,
+      themeController) {
     return Column(
       children: [
         Padding(
@@ -223,16 +317,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Row(
             children: [
               // icon
-              Icon(
-                Icons.favorite,
-                size: screenWidth(context) * 7,
-              ),
+              Icon(Icons.favorite,
+                  size: screenWidth(context) * 7,
+                  color: themeController.textColor),
               SizedBox(width: screenWidth(context) * 5),
               text(
                 title: title,
                 fontSize: screenWidth(context) * 3.5,
                 fontWeight: FontWeight.w500,
-                color: Colors.black,
+                color: themeController.textColor,
               ),
               const Spacer(),
               InkWell(
@@ -244,8 +337,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     );
                   },
-                  child: Icon(Icons.arrow_forward_ios,
-                      size: screenWidth(context) * 4)),
+                  child: Icon(
+                    Icons.arrow_forward_ios,
+                    size: screenWidth(context) * 4,
+                    color: themeController.textColor,
+                  )),
             ],
           ),
         ),
@@ -279,7 +375,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               title: watchListModel.getWatchlist[i].movieTitle,
                               fontSize: screenWidth(context) * 3.5,
                               fontWeight: FontWeight.w500,
-                              color: Colors.black,
+                              color: themeController.textColor,
                             ),
                           ],
                         ),

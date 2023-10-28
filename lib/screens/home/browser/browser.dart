@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:movie_tracker/global_widgets/responsive.dart';
 import 'package:movie_tracker/screens/home/details.dart';
+import 'package:provider/provider.dart';
 
 import '../../../global_widgets/text_widget.dart';
+import '../../../models/theme.dart';
 import '../../../network_connection/network.dart';
 import '../../../theme/data.dart';
 
@@ -72,11 +74,10 @@ class _BrowserScreenState extends State<BrowserScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // getPopular();
-    print(movies);
+    final themeController = Provider.of<ThemeController>(context);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: themeController.backgroundColor,
         elevation: 0,
         toolbarHeight: screenWidth(context) * 15,
         title: Row(
@@ -85,19 +86,39 @@ class _BrowserScreenState extends State<BrowserScreen> {
             Expanded(
               child: SizedBox(
                 height: screenWidth(context) * 10,
-                child: TextField(
+                child: TextFormField(
                   controller: searchController,
                   onChanged: (value) {
                     searchMovies(value);
                   },
-                  onSubmitted: (value) {
-                    // unfocus
+                  onSaved: (value) {
                     FocusScope.of(context).unfocus();
                   },
+                  style: TextStyle(
+                    color: themeController.textColor,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Search',
+                    hintStyle: TextStyle(
+                      color: themeController.textColor,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: themeController.textColor,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: themeController.textColor,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: themeController.textColor,
+                      ),
                     ),
                     contentPadding: EdgeInsets.zero,
                     prefixIcon: const Icon(
@@ -105,13 +126,16 @@ class _BrowserScreenState extends State<BrowserScreen> {
                       color: AppTheme.lightPrimaryColor,
                     ),
                   ),
+                  keyboardAppearance: themeController.isDarkMode
+                      ? Brightness.dark
+                      : Brightness.light,
                 ),
               ),
             ),
           ],
         ),
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: themeController.backgroundColor,
       body: Column(
         // physics: const NeverScrollableScrollPhysics(),
         children: [
@@ -124,7 +148,7 @@ class _BrowserScreenState extends State<BrowserScreen> {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
-                  filterButton(context, 'All Shows', () {
+                  filterButton(context, themeController, 'All Shows', () {
                     if (category != 'All Shows') {
                       setState(() {
                         category = 'All Shows';
@@ -132,7 +156,7 @@ class _BrowserScreenState extends State<BrowserScreen> {
                       getPopular();
                     }
                   }),
-                  filterButton(context, 'Movies', () {
+                  filterButton(context, themeController, 'Movies', () {
                     if (category != 'Movies') {
                       setState(() {
                         category = 'Movies';
@@ -140,7 +164,7 @@ class _BrowserScreenState extends State<BrowserScreen> {
                       getPopular();
                     }
                   }),
-                  filterButton(context, 'TV Shows', () {
+                  filterButton(context, themeController, 'TV Shows', () {
                     if (category != 'TV Shows') {
                       setState(() {
                         category = 'TV Shows';
@@ -154,9 +178,9 @@ class _BrowserScreenState extends State<BrowserScreen> {
           ),
           Expanded(
             child: isLoading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(
-                      color: Colors.black,
+                      color: themeController.textColor,
                     ),
                   )
                 : Padding(
@@ -213,6 +237,7 @@ class _BrowserScreenState extends State<BrowserScreen> {
                                         movies[index]['original_name'] ??
                                         'Unknown',
                                     fontSize: screenWidth(context) * 3,
+                                    color: themeController.textColor,
                                   ),
                                 ),
                               )
@@ -228,6 +253,7 @@ class _BrowserScreenState extends State<BrowserScreen> {
               child: text(
                 title: 'No results found',
                 fontSize: screenWidth(context) * 5,
+                color: themeController.textColor,
               ),
             ),
         ],
@@ -235,7 +261,8 @@ class _BrowserScreenState extends State<BrowserScreen> {
     );
   }
 
-  filterButton(BuildContext context, String title, Function onTap) {
+  filterButton(BuildContext context, ThemeController themeController,
+      String title, Function onTap) {
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -258,8 +285,9 @@ class _BrowserScreenState extends State<BrowserScreen> {
               border: Border.all(
                 color: AppTheme.lightPrimaryColor,
               ),
-              color:
-                  category == title ? AppTheme.lightPrimaryColor : Colors.white,
+              color: category == title
+                  ? AppTheme.lightPrimaryColor
+                  : themeController.backgroundColor,
             ),
             child: Align(
               alignment: Alignment.center,

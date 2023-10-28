@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:movie_tracker/global_widgets/responsive.dart';
 import 'package:movie_tracker/global_widgets/text_widget.dart';
+import 'package:provider/provider.dart';
 
+import '../models/theme.dart';
 import '../theme/data.dart';
 
 class AppBarWidget extends StatelessWidget {
@@ -20,20 +22,22 @@ class AppBarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeController = Provider.of<ThemeController>(context);
     return AppBar(
       centerTitle: centerTitle,
-      backgroundColor: AppTheme.lightPrimaryColor,
+      backgroundColor: themeController.primaryColor,
       automaticallyImplyLeading: false,
       title: text(
         title: title,
         fontSize: screenWidth(context) * 4,
         fontWeight: FontWeight.bold,
+        color: themeController.textColor,
       ),
       leading: showBackButton ? IconButton(
         onPressed: () {
           Navigator.pop(context);
         },
-        icon: const Icon(Icons.arrow_back_ios,color: Colors.black,),
+        icon: Icon(Icons.arrow_back_ios,color: themeController.textColor,),
       ) : null,
       toolbarHeight: screenHeight(context) * 8,
       actions: actions == [] ? null : actions,

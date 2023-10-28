@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:movie_tracker/screens/home/details.dart';
+import 'package:provider/provider.dart';
 
 import '../../global_widgets/appbar_widget.dart';
 import '../../global_widgets/responsive.dart';
 import '../../global_widgets/text_widget.dart';
+import '../../models/theme.dart';
 import '../../network_connection/network.dart';
 
 class ListScreen extends StatefulWidget {
@@ -76,6 +78,7 @@ class _ListScreenState extends State<ListScreen> {
   @override
   Widget build(BuildContext context) {
     // print(widget.title);
+    final themeController = Provider.of<ThemeController>(context);
     return Scaffold(
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(screenHeight(context) * 8),
@@ -84,9 +87,10 @@ class _ListScreenState extends State<ListScreen> {
             centerTitle: false,
             showBackButton: true,
           )),
+      backgroundColor: themeController.backgroundColor,
       body: isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Colors.black),
+          ? Center(
+              child: CircularProgressIndicator(color: themeController.textColor),
             )
           : Padding(
               padding: EdgeInsets.symmetric(
@@ -131,6 +135,7 @@ class _ListScreenState extends State<ListScreen> {
                                     title: movies[index]['original_title'] ??
                                         movies[index]['original_name'],
                                     fontSize: screenWidth(context) * 3,
+                                    color: themeController.textColor,
                                   ))
                             ],
                           ),
@@ -150,11 +155,15 @@ class _ListScreenState extends State<ListScreen> {
                             getMovies();
                           }
                         },
-                        icon: const Icon(Icons.arrow_back_ios),
+                        icon: Icon(Icons.arrow_back_ios,
+                            color: currentPage > 1
+                                ? themeController.textColor
+                                : Colors.grey),
                       ),
                       text(
                         title: '$currentPage of $totalPage',
                         fontSize: screenWidth(context) * 3,
+                        color: themeController.textColor,
                       ),
                       IconButton(
                         onPressed: () {
@@ -165,7 +174,10 @@ class _ListScreenState extends State<ListScreen> {
                             getMovies();
                           }
                         },
-                        icon: const Icon(Icons.arrow_forward_ios),
+                        icon: Icon(Icons.arrow_forward_ios,
+                            color: currentPage < totalPage
+                                ? themeController.textColor
+                                : Colors.grey),
                       ),
                     ],
                   )

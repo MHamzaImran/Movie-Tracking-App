@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:movie_tracker/screens/home/details.dart';
+import 'package:provider/provider.dart';
 
 import '../../global_widgets/appbar_widget.dart';
 import '../../global_widgets/responsive.dart';
 import '../../global_widgets/text_widget.dart';
+import '../../models/theme.dart';
 import '../../network_connection/network.dart';
 import '../../theme/data.dart';
 import 'list.dart';
@@ -31,15 +33,14 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       airingTodayTV = response['results'];
     });
   }
-  
+
   getPopularShows() async {
-    var response =
-        await Network().get('/3/tv/popular?language=en-US&page=2');
+    var response = await Network().get('/3/tv/popular?language=en-US&page=2');
     setState(() {
       popularShows = response['results'];
     });
   }
-  
+
   getOnTheAirTV() async {
     var response =
         await Network().get('/3/tv/on_the_air?language=en-US&page=3');
@@ -47,10 +48,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       onTheAirTV = response['results'];
     });
   }
-  
+
   getTopRatedShows() async {
-    var response =
-        await Network().get('/3/tv/top_rated?language=en-US&page=1');
+    var response = await Network().get('/3/tv/top_rated?language=en-US&page=1');
     setState(() {
       topRatedShows = response['results'];
     });
@@ -82,6 +82,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeController = Provider.of<ThemeController>(context);
     return Scaffold(
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(screenHeight(context) * 8),
@@ -89,6 +90,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             title: 'Discover',
             centerTitle: false,
           )),
+      backgroundColor: themeController.backgroundColor,
       body: Column(
         children: [
           SizedBox(height: screenHeight(context) * 2),
@@ -111,20 +113,24 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
           //   ),
           // ),
           isLoading
-              ? const Expanded(
+              ? Expanded(
                   child: Center(
                     child: CircularProgressIndicator(
-                      color: Colors.black,
+                      color: themeController.textColor,
                     ),
                   ),
                 )
               : Expanded(
                   child: ListView(
                     children: [
-                      section(context, 'Shows Airing Today', airingTodayTV),
-                      section(context, 'Popular Shows', popularShows),
-                      section(context, 'On The Air', onTheAirTV),
-                      section(context, 'Top Rated Shows', topRatedShows),
+                      section(context, themeController, 'Shows Airing Today',
+                          airingTodayTV),
+                      section(context, themeController, 'Popular Shows',
+                          popularShows),
+                      section(
+                          context, themeController, 'On The Air', onTheAirTV),
+                      section(context, themeController, 'Top Rated Shows',
+                          topRatedShows),
                       // section(context, 'Most Watched Interviews'),
                       // section(context, 'Most Watched Tv Shows'),
                       SizedBox(
@@ -138,7 +144,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     );
   }
 
-  section(BuildContext context, String title, List list) {
+  section(BuildContext context, themeController, String title, List list) {
     return Column(
       children: [
         Padding(
@@ -150,15 +156,16 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 title: title,
                 fontSize: screenWidth(context) * 3.5,
                 fontWeight: FontWeight.w500,
-                color: Colors.black,
+                color: themeController.textColor,
               ),
               InkWell(
-                onTap: (){
+                onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => ListScreen(
-                        title: title, mediaType: 'tv',
+                        title: title,
+                        mediaType: 'tv',
                       ),
                     ),
                   );
@@ -182,12 +189,13 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             children: [
               for (var i = 0; i < list.length; i++)
                 GestureDetector(
-                  onTap: (){
+                  onTap: () {
                     print(list[i]['id']);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => DetailScreen(id: list[i]['id'], mediaType: 'tv'),
+                        builder: (context) =>
+                            DetailScreen(id: list[i]['id'], mediaType: 'tv'),
                       ),
                     );
                   },
@@ -209,7 +217,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                             title: list[i]['original_name'],
                             fontSize: screenWidth(context) * 3.5,
                             fontWeight: FontWeight.w500,
-                            color: Colors.black,
+                            color: themeController.textColor,
                           ),
                         ],
                       ),

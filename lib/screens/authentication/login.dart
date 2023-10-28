@@ -15,6 +15,8 @@ import '../../network_connection/google_sign_in.dart';
 import '../../theme/data.dart';
 import 'bottom_narbar.dart';
 
+bool rememberMe = false;
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
@@ -31,6 +33,33 @@ class _LoginScreenState extends State<LoginScreen> {
   String passwordErrorMessage = '';
   bool emailIsValid = false;
   bool passwordIsValid = false;
+
+  checkAlreadyLogin() async {
+    print('checkAlreadyLogin');
+    final prefs = await SharedPreferences.getInstance();
+    final remember = prefs.getBool('rememberMe') ?? false;
+    print('rememberMe: $remember');
+    if (remember) {
+      setState(() {
+        rememberMe = true;
+      });
+      final prefs = await SharedPreferences.getInstance();
+      // check String userId
+      final userId = prefs.getString('userId');
+      if (userId != null && userId.isNotEmpty) {
+        if (!mounted) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BottomNavigation(
+              initialIndex: 0,
+              onIndexChanged: (int value) {},
+            ),
+          ),
+        );
+      }
+    }
+  }
 
   emailValidation() {
     if (emailController.text.isEmpty) {
@@ -79,11 +108,12 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     // userAlreadyLoggedIn();
     super.initState();
+    checkAlreadyLogin();
   }
 
   @override
   Widget build(BuildContext context) {
-    final watchListModel = Provider.of<Watchlist>(context);
+    // final watchListModel = Provider.of<Watchlist>(context);
     return Scaffold(
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(screenHeight(context) * 8),
@@ -161,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(height: screenHeight(context) * 2),
                 // remember me and forgot password
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Row(
                       children: [
@@ -169,9 +199,21 @@ class _LoginScreenState extends State<LoginScreen> {
                           height: screenHeight(context) * 3,
                           width: screenWidth(context) * 5,
                           child: Checkbox(
-                            value: false,
+                            value: rememberMe,
+                            fillColor: MaterialStateProperty.all<Color>(
+                              AppTheme.lightTextColor,
+                            ),
                             splashRadius: 0,
-                            onChanged: (value) {},
+                            onChanged: (value) async{
+                              // print(value);
+                              setState(() {
+                                rememberMe = value!;
+                              });
+                              // set value is shared preferences
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              prefs.setBool('rememberMe', rememberMe);
+                            },
                           ),
                         ),
                         SizedBox(width: screenWidth(context) * 2),
@@ -182,21 +224,21 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-                    InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ForgotPasswordScreen(),
-                          ),
-                        );
-                      },
-                      child: text(
-                        title: 'Forgot Password?',
-                        fontSize: screenWidth(context) * 3,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
+                    // InkWell(
+                    //   onTap: () {
+                    //     Navigator.push(
+                    //       context,
+                    //       MaterialPageRoute(
+                    //         builder: (context) => const ForgotPasswordScreen(),
+                    //       ),
+                    //     );
+                    //   },
+                    //   child: text(
+                    //     title: 'Forgot Password?',
+                    //     fontSize: screenWidth(context) * 3,
+                    //     fontWeight: FontWeight.w400,
+                    //   ),
+                    // ),
                   ],
                 ),
                 SizedBox(height: screenHeight(context) * 5),
@@ -219,7 +261,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (userCredential != null) {
                           // Authentication successful
                           // Redirect or perform actions after successful login
-                          watchListModel.updateListFromApi();
+                          // final watchListModel = Provider.of<Watchlist>(context);
+                          // watchListModel.updateListFromApi();
                           if (!mounted) return;
                           Navigator.push(
                             context,
@@ -345,7 +388,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           await prefs.setString('name', name);
                           await prefs.setString('profileUrl', pictureUrl);
                           await prefs.setString('email', email);
-                          watchListModel.updateListFromApi();
+                          // final watchListModel = Provider.of<Watchlist>(context);
+                          // watchListModel.updateListFromApi();
                           if (!mounted) return;
                           Navigator.push(
                             context,

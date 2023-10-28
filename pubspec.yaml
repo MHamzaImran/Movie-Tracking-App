@@ -32,6 +32,7 @@ dependencies:
   http: ^0.13.6
   fluttertoast: ^8.1.1
   image_picker: ^1.0.4
+  flutter_native_splash:
   
 dev_dependencies:
   flutter_test:

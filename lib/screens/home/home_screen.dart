@@ -4,8 +4,10 @@ import 'package:movie_tracker/global_widgets/appbar_widget.dart';
 import 'package:movie_tracker/global_widgets/responsive.dart';
 import 'package:movie_tracker/screens/home/details.dart';
 import 'package:movie_tracker/theme/data.dart';
+import 'package:provider/provider.dart';
 
 import '../../global_widgets/text_widget.dart';
+import '../../models/theme.dart';
 import '../../network_connection/network.dart';
 import 'list.dart';
 
@@ -90,27 +92,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   for (var imageUrl in images) {
-    //     precacheImage(NetworkImage(imageUrl), context);
-    //   }
-    // });
     getAllData();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    // getNowPlayingMovies();
-    // print(popularMovies);
-    // print(nowPlayingMovies);
-    // getTopRatedMovies();
-    // getSliderImages();
-    // print(sliderMovies);
-    // print(sliderMovies[2]['known_for'].length);
-    // print(sliderMovies[2]['known_for']);
-    // print(sliderMovies[2]['known_for'][1]['original_title']);
-    // print("Slider Movies: $sliderMovies");
+    final themeController = Provider.of<ThemeController>(context);
     return Scaffold(
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(screenHeight(context) * 8),
@@ -118,11 +106,11 @@ class _HomeScreenState extends State<HomeScreen> {
             title: 'Movie Tracker',
             centerTitle: false,
           )),
-      backgroundColor: Colors.white,
+      backgroundColor: themeController.backgroundColor,
       body: showLoading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(
-                color: Colors.black,
+                color: themeController.textColor,
               ),
             )
           : ListView(
@@ -250,13 +238,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                 title: sliderMovies[11]['original_title'] ?? '',
                                 fontSize: screenWidth(context) * 3.5,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.black,
+                                color: themeController.textColor,
                               ),
                               text(
                                 title: sliderMovies[11]['overview'] ?? '',
                                 fontSize: screenWidth(context) * 3,
                                 fontWeight: FontWeight.w400,
-                                color: Colors.black,
+                                color: themeController.textColor,
                                 maxLines: 5,
                               ),
                               // vote average
@@ -273,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         "${sliderMovies[11]['vote_average'] ?? ''} (${sliderMovies[11]['vote_count'] ?? ''})",
                                     fontSize: screenWidth(context) * 3,
                                     fontWeight: FontWeight.w400,
-                                    color: Colors.black,
+                                    color: themeController.textColor,
                                   ),
                                 ],
                               ),
@@ -318,16 +306,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 SizedBox(height: screenHeight(context) * 3),
-                moviesList(context,
+                moviesList(context,themeController,
                     title: 'Now Playing', movieList: nowPlayingMovies),
                 SizedBox(height: screenHeight(context) * 3),
-                moviesList(context,
+                moviesList(context,themeController,
                     title: 'Popular Movies', movieList: popularMovies),
                 SizedBox(height: screenHeight(context) * 3),
-                moviesList(context,
+                moviesList(context,themeController,
                     title: 'Top Rated', movieList: topRatedMovies),
                 SizedBox(height: screenHeight(context) * 3),
-                moviesList(context,
+                moviesList(context,themeController,
                     title: 'Upcoming', movieList: upcomingMovies),
                 SizedBox(height: screenHeight(context) * 10),
               ],
@@ -335,11 +323,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  moviesList(BuildContext context,
+  moviesList(BuildContext context, themeController,
       {required String title, required List movieList}) {
     return Column(
       children: [
-        header(context, title),
+        header(context, title, themeController),
         SizedBox(height: screenHeight(context) * 2),
         Container(
           height: screenHeight(context) * 32,
@@ -381,7 +369,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           title: movieList[index]['original_title'],
                           fontSize: screenWidth(context) * 3.5,
                           fontWeight: FontWeight.w500,
-                          color: Colors.black,
+                          color: themeController.textColor,
                         ),
                       ],
                     ),
@@ -395,7 +383,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  header(BuildContext context, String title) {
+  header(BuildContext context, String title, themeController) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: screenWidth(context) * 5),
       child: Row(
@@ -405,7 +393,7 @@ class _HomeScreenState extends State<HomeScreen> {
             title: title,
             fontSize: screenWidth(context) * 3.5,
             fontWeight: FontWeight.w500,
-            color: Colors.black,
+            color: themeController.textColor,
           ),
           GestureDetector(
             onTap: () {

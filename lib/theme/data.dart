@@ -12,8 +12,8 @@ class AppTheme {
   static const Color lightDisabledColor = Color(0xFFBDBDBD);
 
   // Dark Theme Colors
-  static const Color darkPrimaryColor = Color(0xff1C1C1C);
-  static const Color darkBackgroundColor = Color(0xff454545);
+  static const Color darkPrimaryColor = Color(0xff000000);
+  static const Color darkBackgroundColor = Color(0xff1C1C1C);
   static const Color darkTextColor = Colors.white;
   static const Color darkCardColor = Color(0xff2e2e2e);
   static const Color darkCardTextColor = Colors.white;
