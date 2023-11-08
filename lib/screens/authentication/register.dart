@@ -43,7 +43,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         nameErrorMessage = 'Name is required';
         nameIsValid = false;
       });
-    }else{
+    } else {
       setState(() {
         nameErrorMessage = '';
         nameIsValid = true;
@@ -152,7 +152,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         color: themeController.textColor,
                         width: 0.5,
                       ),
-                      
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -168,7 +167,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         width: 0.5,
                       ),
                     ),
-                    
                   ),
                   cursorColor: themeController.textColor,
                   onChanged: (value) {
@@ -350,18 +348,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           });
                           FocusScope.of(context).unfocus();
                           final AuthServices authService = AuthServices();
-                          // Sign in with email and password
                           final UserCredential? userCredential =
                               await authService.registerWithEmailAndPassword(
-                                nameController.text,
+                            nameController.text,
                             emailController.text,
                             passwordController.text,
                           );
                           if (userCredential != null) {
-                            // Authentication successful
-                            // Redirect or perform actions after successful login
-                            toastBlock('User registered successfully');
-                            watchListModel.updateListFromApi();
                             if (!mounted) return;
                             Navigator.pop(context);
                             Navigator.push(
@@ -373,7 +366,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                               ),
                             );
-
+                            toastBlock('User registered successfully');
+                            watchListModel.updateListFromApi();
                             final prefs = await SharedPreferences.getInstance();
                             await prefs.setString(
                                 'userId', userCredential.user!.uid);
@@ -385,7 +379,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 'email', userCredential.user!.email.toString());
                           }
                         } catch (e) {
-                          print(e);
+                          toastBlock('Something went wrong! Please try again.');
                         } finally {
                           setState(() {
                             isLoading = false;
@@ -474,9 +468,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                 ),
-                
                 SizedBox(height: screenHeight(context) * 5),
-                
               ],
             ),
           ),
@@ -504,7 +496,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     recognizer: TapGestureRecognizer()
                       ..onTap = () async {
-                        showPolicyOrTermsDialog(context, themeController, 'Privacy Policy', privacyPolicyText);
+                        showPolicyOrTermsDialog(context, themeController,
+                            'Privacy Policy', privacyPolicyText);
                       },
                   ),
                   const TextSpan(text: ' and '),
@@ -516,17 +509,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     recognizer: TapGestureRecognizer()
                       ..onTap = () async {
-                        showPolicyOrTermsDialog(context, themeController, 'Terms of Use', termsOfUseText);
+                        showPolicyOrTermsDialog(context, themeController,
+                            'Terms of Use', termsOfUseText);
                       },
                   ),
                 ],
               ),
             )),
       ),
-
     );
   }
-  void showPolicyOrTermsDialog(BuildContext context, ThemeController themeController, String title, String content) {
+
+  void showPolicyOrTermsDialog(BuildContext context,
+      ThemeController themeController, String title, String content) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -541,7 +536,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                text(title: title, fontSize: screenWidth(context) * 4, fontWeight: FontWeight.bold, color: themeController.textColor),
+                text(
+                    title: title,
+                    fontSize: screenWidth(context) * 4,
+                    fontWeight: FontWeight.bold,
+                    color: themeController.textColor),
                 SizedBox(height: screenHeight(context) * 2),
                 Expanded(
                   child: SingleChildScrollView(
@@ -567,8 +566,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           fontSize: screenWidth(context) * 3.5,
                           fontWeight: FontWeight.w400,
                           color: Colors.black,
-                        )
-                    ),
+                        )),
                   ],
                 ),
               ],

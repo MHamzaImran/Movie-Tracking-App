@@ -106,7 +106,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void initState() {
-    // userAlreadyLoggedIn();
     super.initState();
     checkAlreadyLogin();
   }
@@ -231,7 +230,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                 SizedBox(height: screenHeight(context) * 2),
-                // remember me and forgot password
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -296,18 +294,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           emailLoading = true;
                         });
                         final AuthServices authService = AuthServices();
-
-                        // Sign in with email and password
                         final UserCredential? userCredential =
                             await authService.signInWithEmailAndPassword(
                           emailController.text,
                           passwordController.text,
                         );
                         if (userCredential != null) {
-                          // Authentication successful
-                          // Redirect or perform actions after successful login
-                          // final watchListModel = Provider.of<Watchlist>(context);
-                          // watchListModel.updateListFromApi();
                           if (!mounted) return;
                           Navigator.push(
                             context,
@@ -321,12 +313,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           final prefs = await SharedPreferences.getInstance();
                           await prefs.setString(
                               'userId', userCredential.user!.uid);
-                          // await prefs.setString('name',
-                          //     userCredential.user!.displayName.toString());
-                          // await prefs.setString('profileUrl',
-                          //     userCredential.user!.photoURL.toString());
-                          // await prefs.setString(
-                          //     'email', userCredential.user!.email.toString());
                         }
                       }
                       setState(() {
@@ -393,13 +379,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         setState(() {
                           googleLoading = true;
                         });
-                        // await GoogleSignInProvider().logout();
                         final userCredential =
                             await GoogleSignInProvider().login();
                         if (userCredential != null) {
-                          // Access the user's profile data
-                          // user id
-                          // check if present in users collection
+                          if (!mounted) return;
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => BottomNavigation(
+                                initialIndex: 0,
+                                onIndexChanged: (int value) {},
+                              ),
+                            ),
+                          );
                           final user = await FirebaseFirestore.instance
                               .collection('users')
                               .doc(userCredential.user!.uid)
@@ -415,7 +407,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               'profileUrl': userCredential.user!.photoURL,
                             });
                           }
-
                           final profile =
                               userCredential.additionalUserInfo?.profile;
                           final pictureUrl = profile['picture'];
@@ -427,21 +418,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           await prefs.setString('name', name);
                           await prefs.setString('profileUrl', pictureUrl);
                           await prefs.setString('email', email);
-                          // final watchListModel = Provider.of<Watchlist>(context);
-                          // watchListModel.updateListFromApi();
-                          if (!mounted) return;
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => BottomNavigation(
-                                initialIndex: 0,
-                                onIndexChanged: (int value) {},
-                              ),
-                            ),
-                          );
                         }
                       } catch (e) {
-                        toastBlock('Something went wrong. Try again.');
+                        toastBlock('Something went wrong! Please try again.');
                       } finally {
                         setState(() {
                           googleLoading = false;
