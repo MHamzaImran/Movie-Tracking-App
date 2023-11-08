@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../global_widgets/appbar_widget.dart';
 import '../../../global_widgets/responsive.dart';
 import '../../../global_widgets/text_widget.dart';
+import '../../../models/theme.dart';
 import '../../../models/watch_list.dart';
 import '../../../theme/data.dart';
 
@@ -23,6 +24,7 @@ class _WatchListScreenState extends State<WatchListScreen> {
   Widget build(BuildContext context) {
     final watchListModel = Provider.of<Watchlist>(context);
     watchListModel.updateListFromApi();
+    final themeController = Provider.of<ThemeController>(context);
 
     // print(widget.title);
     return Scaffold(
@@ -43,16 +45,19 @@ class _WatchListScreenState extends State<WatchListScreen> {
                             context: context,
                             builder: (context) {
                               return AlertDialog(
+                                backgroundColor: themeController.cardColor,
                                 title: text(
                                   title: 'Delete',
                                   fontSize: screenWidth(context) * 4,
                                   fontWeight: FontWeight.bold,
+                                  color: themeController.textColor,
                                 ),
                                 content: text(
                                   title:
                                       'Are you sure you want to delete these items from WatchList?',
                                   fontSize: screenWidth(context) * 4,
                                   fontWeight: FontWeight.w400,
+                                  color: themeController.textColor,
                                   maxLines: 2,
                                 ),
                                 actions: [
@@ -64,6 +69,7 @@ class _WatchListScreenState extends State<WatchListScreen> {
                                         title: 'Cancel',
                                         fontSize: screenWidth(context) * 4,
                                         fontWeight: FontWeight.bold,
+                                        color: themeController.textColor,
                                       )),
                                   TextButton(
                                       onPressed: () async {
@@ -85,6 +91,7 @@ class _WatchListScreenState extends State<WatchListScreen> {
                                         title: 'Delete',
                                         fontSize: screenWidth(context) * 4,
                                         fontWeight: FontWeight.bold,
+                                        color: themeController.textColor,
                                       )),
                                 ],
                               );
@@ -104,13 +111,14 @@ class _WatchListScreenState extends State<WatchListScreen> {
                     padding: EdgeInsets.only(right: screenWidth(context) * 4),
                     child: Icon(
                       isDeleting ? Icons.check : Icons.delete,
-                      color: Colors.black,
+                      color: themeController.textColor,
                       size: screenHeight(context) * 3,
                     ),
                   ),
                 )
             ],
           )),
+      backgroundColor: themeController.backgroundColor,
       body: Padding(
         padding: EdgeInsets.symmetric(
                 horizontal: screenWidth(context) * 4,
@@ -191,6 +199,7 @@ class _WatchListScreenState extends State<WatchListScreen> {
                                 title: watchListModel
                                     .getWatchlist[index].movieTitle,
                                 fontSize: screenWidth(context) * 3,
+                                color: themeController.textColor,
                               ))
                         ],
                       ),
@@ -205,6 +214,7 @@ class _WatchListScreenState extends State<WatchListScreen> {
                 title: 'No items in Watchlist',
                 fontSize: screenWidth(context) * 4,
                 fontWeight: FontWeight.bold,
+                color: themeController.textColor,
               )))
           ],
         ),

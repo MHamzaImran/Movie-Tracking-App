@@ -56,9 +56,7 @@ class _BrowserScreenState extends State<BrowserScreen> {
     });
     var response = await Network()
         .get('/3/search/multi?language=en-US&query=$query&page=1');
-    print(response);
 
-    // remove with null poster
     setState(() {
       movies = response['results'];
       movies.removeWhere((element) => element['poster_path'] == null);
@@ -200,8 +198,6 @@ class _BrowserScreenState extends State<BrowserScreen> {
                       itemBuilder: (context, index) {
                         return GestureDetector(
                           onTap: () {
-                            print(movies[index]['id']);
-                            print(movies[index]['media_type']);
                             Navigator.push(
                               context,
                               MaterialPageRoute(

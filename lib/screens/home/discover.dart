@@ -190,7 +190,6 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               for (var i = 0; i < list.length; i++)
                 GestureDetector(
                   onTap: () {
-                    print(list[i]['id']);
                     Navigator.push(
                       context,
                       MaterialPageRoute(

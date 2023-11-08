@@ -30,7 +30,6 @@ class _DetailScreenState extends State<DetailScreen> {
   bool isWatchList = false;
 
   getMovieData() async {
-    print(widget.id);
     var response = {};
     if (widget.mediaType == 'movie') {
       response = await Network().get('/3/movie/${widget.id}');
@@ -108,7 +107,6 @@ class _DetailScreenState extends State<DetailScreen> {
       setState(() {
         movieImages = response;
       });
-      print(movieImages);
     }catch(e){
       print(e);
     }
@@ -313,7 +311,7 @@ class _DetailScreenState extends State<DetailScreen> {
 
   detailsSection(BuildContext context, Watchlist watchListModel,
       ThemeController themeController) {
-    return movieData != null
+    return movieData.isNotEmpty
         ? Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -365,13 +363,13 @@ class _DetailScreenState extends State<DetailScreen> {
                     details(
                         context,
                         'Total Season',
-                        movieData['number_of_seasons'].toString() ?? '',
+                        movieData['number_of_seasons'].toString(),
                         themeController),
                     SizedBox(height: screenHeight(context) * 2),
                     details(
                         context,
                         'Total Episode',
-                        movieData['number_of_episodes'].toString() ?? '',
+                        movieData['number_of_episodes'].toString(),
                         themeController),
                     SizedBox(height: screenHeight(context) * 2),
                   ],
@@ -453,10 +451,8 @@ class _DetailScreenState extends State<DetailScreen> {
                                     movieData['poster_path']);
                                 result =
                                     await watchListModel.addToWatchlist(item);
-                                print(result);
                                 toastBlock(result);
                               } catch (e) {
-                                print(e);
                                 toastBlock(result);
                               } finally {
                                 setState(() {
@@ -783,7 +779,7 @@ class _DetailScreenState extends State<DetailScreen> {
                                     title: movieCredits['cast'][index]['name'],
                                     fontSize: screenWidth(context) * 2.5,
                                     fontWeight: FontWeight.w500,
-                                    color: Colors.black,
+                                    color: themeController.textColor,
                                     maxLines: 2,
                                     textAlign: TextAlign.center,
                                   ),
@@ -861,7 +857,7 @@ class _DetailScreenState extends State<DetailScreen> {
                                     title: movieCredits['crew'][index]['name'],
                                     fontSize: screenWidth(context) * 2.5,
                                     fontWeight: FontWeight.w500,
-                                    color: Colors.black,
+                                    color: themeController.textColor,
                                     maxLines: 2,
                                     textAlign: TextAlign.center,
                                   ),
@@ -1066,6 +1062,7 @@ class _DetailScreenState extends State<DetailScreen> {
                         },
                       ).where((widget) => widget != null).toList(),
                     ),
+                    SizedBox(height: screenHeight(context) * 4),
                   ],
                 ),
             )

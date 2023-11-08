@@ -186,7 +186,7 @@ class _EditProfileState extends State<EditProfile> {
                                     title: text(
                                         title: 'Take a Picture',
                                         fontSize: screenWidth(context) * 3.2,
-                                        color: AppTheme.darkTextColor),
+                                        color: themeController.textColor),
                                   ),
                                   Container(
                                     height: .2,
@@ -209,7 +209,7 @@ class _EditProfileState extends State<EditProfile> {
                                     title: text(
                                         title: 'Choose from Gallery',
                                         fontSize: screenWidth(context) * 3.2,
-                                        color: AppTheme.darkTextColor),
+                                        color: themeController.textColor),
                                   ),
                                 ],
                               ),

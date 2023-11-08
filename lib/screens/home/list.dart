@@ -42,7 +42,6 @@ class _ListScreenState extends State<ListScreen> {
     } else if (widget.title == 'Shows Airing Today') {
       category = 'airing_today';
     }
-    print(category);
   }
 
   getMovies() async {
@@ -53,7 +52,6 @@ class _ListScreenState extends State<ListScreen> {
       await getCategory();
       var response = await Network()
           .get('/3/${widget.mediaType}/$category?language=en-US&page=$currentPage');
-      print(response);
       setState(() {
         movies = response['results'];
         // remove movies with null poster
